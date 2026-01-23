@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #0f172a; /* brand-dark */
+  color: white;
+}
+
+/* --- Personalización del Scrollbar (Barra de desplazamiento) --- */
+
+/* El ancho de la barra */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* El fondo de la barra (El riel) */
+::-webkit-scrollbar-track {
+  background: #0f172a; /* Color de fondo de tu página (brand-dark) */
+}
+
+/* La parte que se mueve (El pulgar) */
+::-webkit-scrollbar-thumb {
+  background: #334155; /* Un gris oscuro (slate-700) */
+  border-radius: 5px; /* Bordes redondeados */
+  border: 2px solid #0f172a; /* Un pequeño borde para separarlo */
+}
+
+/* Cuando pasas el mouse por encima */
+::-webkit-scrollbar-thumb:hover {
+  background: #7c3aed; /* Se pone morado (brand-primary) al tocarlo */
+}
