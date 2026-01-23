@@ -68,36 +68,46 @@ exports.getAdminStats = async (req, res) => {
     }
 };
 
-
-// ... (imports y getRecruiterStats existentes) ...
-
-// --- NUEVO: DESCARGAR REPORTE CSV ---
+// --- DESCARGAR REPORTE CSV (CORREGIDO: Incluye Email) ---
 exports.downloadReport = async (req, res) => {
     try {
-        const Vacancy = require('../models/Vacancy');
-        const Application = require('../models/Application');
-
         // 1. Obtener vacantes del reclutador
         const myVacancies = await Vacancy.find({ created_by: req.user.id });
         const vacancyIds = myVacancies.map(v => v._id);
 
-        // 2. Obtener postulaciones
+        // 2. Obtener postulaciones con "Deep Populate" para sacar el email del Usuario
         const applications = await Application.find({ vacancy: { $in: vacancyIds } })
-            .populate('candidate', 'full_name email phone')
+            .populate({
+                path: 'candidate',
+                select: 'full_name phone', // Datos del perfil de candidato
+                populate: {
+                    path: 'user',
+                    select: 'email' // <--- AQUÍ TRAEMOS EL EMAIL DEL USUARIO (LOGIN)
+                }
+            })
             .populate('vacancy', 'title');
 
-        // 3. Construir CSV manualmente (para no instalar librerías extra)
-        let csv = 'Candidato,Email,Telefono,Vacante,Estado,Match IA,Fecha Postulacion\n';
+        // 3. Construir CSV
+        // \ufeff es el BOM para que Excel abra bien los acentos
+        let csv = '\ufeffCandidato,Email,Telefono,Vacante,Estado,Match IA,Fecha Postulacion\n';
 
         applications.forEach(app => {
             const date = new Date(app.applied_at).toLocaleDateString();
-            // Evitar errores si campos son null
+            
+            // Extracción segura de datos
             const name = app.candidate?.full_name || 'Desconocido';
-            const email = app.candidate?.email || 'N/A';
+            
+            // CORRECCIÓN: El email viene de candidate.user.email
+            const email = app.candidate?.user?.email || 'No registrado';
+            
             const phone = app.candidate?.phone || 'N/A';
             const title = app.vacancy?.title || 'Vacante eliminada';
             
-            csv += `${name},${email},${phone},"${title}",${app.status},${app.ai_score}%,${date}\n`;
+            // Limpiar comas en los textos para no romper el CSV
+            const cleanName = name.replace(/,/g, '');
+            const cleanTitle = title.replace(/,/g, '');
+
+            csv += `${cleanName},${email},${phone},"${cleanTitle}",${app.status},${app.ai_score}%,${date}\n`;
         });
 
         // 4. Enviar archivo

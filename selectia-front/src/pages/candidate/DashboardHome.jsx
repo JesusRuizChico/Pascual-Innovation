@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, MapPin, DollarSign, Briefcase, ChevronRight, 
-  UploadCloud, Edit3, CheckCircle2, Brain, Loader2
+  UploadCloud, Edit3, CheckCircle2, Brain, Loader2, XCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from '../../api/axios';
@@ -13,240 +13,138 @@ const DashboardHome = () => {
   const [loading, setLoading] = useState(true);
   const [completion, setCompletion] = useState(0);
 
-  // Obtener información básica del usuario desde el login (localStorage)
   const userLocal = JSON.parse(localStorage.getItem('user')) || {};
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Cargar Perfil del Candidato
+        // 1. Cargar Perfil
         let currentProfile = null;
         try {
             const resProfile = await axios.get('/candidates/me');
             currentProfile = resProfile.data;
             setProfile(currentProfile);
-        } catch (err) {
-            console.log("El perfil aún no ha sido creado");
-        }
+        } catch (err) { console.log("Perfil no creado"); }
 
-        // 2. Calcular el porcentaje de completado (Lógica Real)
+        // 2. Calcular % Completado
         let percent = 0;
         if (currentProfile) {
             if (currentProfile.title) percent += 20;
             if (currentProfile.phone) percent += 20;
             if (currentProfile.location) percent += 20;
-            if (currentProfile.skills && currentProfile.skills.length > 0) percent += 20;
+            if (currentProfile.skills?.length > 0) percent += 20;
             if (currentProfile.cv_url) percent += 20;
         }
         setCompletion(percent);
 
-        // 3. Cargar Vacantes y calcular Match en el cliente (Visualización)
+        // 3. Cargar Vacantes
         const resVacancies = await axios.get('/vacancies');
         
-        // Ordenar vacantes por mejor coincidencia de habilidades
-        const sortedVacancies = resVacancies.data.map(vac => {
+        // --- FILTRADO DE DESCARTADAS ---
+        // Obtenemos los IDs descartados del perfil (si existen)
+        const rejectedIds = currentProfile?.rejected_vacancies || [];
+        
+        // Filtramos las vacantes que NO estén en la lista de rechazadas
+        const availableVacancies = resVacancies.data.filter(vac => !rejectedIds.includes(vac._id));
+
+        // 4. Calcular Match IA y Ordenar
+        const sortedVacancies = availableVacancies.map(vac => {
             let matchScore = 0;
-            // Si el usuario tiene habilidades, comparar
-            if (currentProfile && currentProfile.skills && vac.skills_required) {
+            if (currentProfile?.skills && vac.skills_required) {
                 const userSkills = currentProfile.skills.map(s => s.toLowerCase().trim());
                 const reqSkills = vac.skills_required.map(s => s.toLowerCase().trim());
-                // Intersección de arreglos
                 const matches = reqSkills.filter(r => userSkills.includes(r));
-                // Cálculo simple
                 matchScore = reqSkills.length > 0 ? Math.round((matches.length / reqSkills.length) * 100) : 50;
-            } else {
-                matchScore = 10; // Match bajo si no hay perfil
-            }
+            } else { matchScore = 10; }
             return { ...vac, matchScore };
         })
-        .sort((a, b) => b.matchScore - a.matchScore) // Ordenar descendente
-        .slice(0, 3); // Mostrar las 3 mejores
+        .sort((a, b) => b.matchScore - a.matchScore)
+        .slice(0, 3);
 
         setVacancies(sortedVacancies);
 
-      } catch (error) {
-        console.error("Error cargando el tablero", error);
-      } finally {
-        setLoading(false);
-      }
+      } catch (error) { console.error(error); } finally { setLoading(false); }
     };
     fetchData();
   }, []);
+
+  // --- FUNCIÓN PARA DESCARTAR ---
+  const handleDiscard = async (vacancyId) => {
+      try {
+          // 1. Actualización Optimista (Lo borramos de la vista inmediatamente)
+          setVacancies(prev => prev.filter(v => v._id !== vacancyId));
+          
+          // 2. Petición al Backend
+          await axios.put(`/candidates/discard/${vacancyId}`);
+          
+      } catch (error) {
+          console.error("Error al descartar", error);
+          alert("Hubo un error al descartar la vacante.");
+      }
+  };
 
   if (loading) return <div className="flex justify-center items-center h-96"><Loader2 className="animate-spin text-brand-primary" size={40}/></div>;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
       
-      {/* --- COLUMNA IZQUIERDA (Perfil - Estilo OCC) --- */}
+      {/* COLUMNA IZQUIERDA (Perfil) */}
       <div className="lg:col-span-3 space-y-6">
-        
-        {/* Tarjeta de Perfil */}
         <div className="bg-brand-surface/50 border border-white/5 rounded-2xl p-6 text-center relative overflow-hidden group">
-            {/* Fondo decorativo */}
             <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-brand-primary/20 to-transparent"></div>
-            
-            {/* Botón Editar (Lápiz) */}
-            <Link to="/candidate/cv" className="absolute top-4 right-4 p-2 bg-white/5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-10">
-                <Edit3 size={16} />
-            </Link>
+            <Link to="/candidate/cv" className="absolute top-4 right-4 p-2 bg-white/5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-10"><Edit3 size={16} /></Link>
 
-            {/* --- AVATAR CON FOTO REAL --- */}
             <div className="relative inline-block mt-4 mb-4">
                 <div className="w-24 h-24 rounded-full bg-brand-dark border-4 border-brand-surface flex items-center justify-center text-3xl font-bold text-brand-primary shadow-xl overflow-hidden">
-                    {profile?.photo_url ? (
-                        <img 
-                            src={profile.photo_url} 
-                            alt="Perfil" 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                                e.target.style.display='none'; // Ocultar si falla
-                                if(e.target.nextSibling) e.target.nextSibling.style.display='block';
-                            }}
-                        />
-                    ) : null}
-                    
-                    {/* Iniciales de respaldo (ocultas si la foto carga bien) */}
+                    {profile?.photo_url ? <img src={profile.photo_url} alt="Perfil" className="w-full h-full object-cover"/> : null}
                     <span style={{ display: profile?.photo_url ? 'none' : 'block' }}>
                         {profile?.full_name ? profile.full_name.substring(0, 2).toUpperCase() : userLocal.name?.substring(0, 2).toUpperCase()}
                     </span>
                 </div>
-                
-                {/* Indicador Visual de Estado */}
-                <div 
-                    className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-4 border-brand-surface ${completion === 100 ? 'bg-green-500' : 'bg-red-500'}`} 
-                    title={completion === 100 ? "Perfil Completo" : "Perfil Incompleto"}
-                ></div>
+                <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-4 border-brand-surface ${completion === 100 ? 'bg-green-500' : 'bg-red-500'}`}></div>
             </div>
 
-            <h2 className="text-xl font-bold text-white">
-                {profile ? profile.full_name : userLocal.name}
-            </h2>
-            <p className="text-sm text-slate-400 mb-4">
-                {profile?.title || "Sin título profesional"}
-            </p>
+            <h2 className="text-xl font-bold text-white">{profile ? profile.full_name : userLocal.name}</h2>
+            <p className="text-sm text-slate-400 mb-4">{profile?.title || "Sin título profesional"}</p>
 
-            {/* Badge de Estado Dinámico */}
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold mb-6 ${
-                completion === 100 
-                ? 'bg-green-500/10 border-green-500/20 text-green-400' 
-                : 'bg-red-500/10 border-red-500/20 text-red-400'
-            }`}>
+            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold mb-6 ${completion === 100 ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
                 <span className={`w-2 h-2 rounded-full ${completion === 100 ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`}></span>
                 {completion === 100 ? 'Perfil Activo' : 'CV Incompleto'}
             </div>
 
             <div className="border-t border-white/5 pt-4">
-                <div className="flex justify-between text-sm text-slate-400 mb-2">
-                    <span>Perfil completado</span>
-                    <span className="text-white">{completion}%</span>
-                </div>
-                {/* Barra de progreso real */}
-                <div className="w-full bg-brand-dark rounded-full h-2 overflow-hidden">
-                    <div 
-                        className={`h-full rounded-full transition-all duration-1000 ${completion === 100 ? 'bg-green-500' : 'bg-brand-primary'}`} 
-                        style={{width: `${completion}%`}}
-                    ></div>
-                </div>
+                <div className="flex justify-between text-sm text-slate-400 mb-2"><span>Perfil completado</span><span className="text-white">{completion}%</span></div>
+                <div className="w-full bg-brand-dark rounded-full h-2 overflow-hidden"><div className={`h-full rounded-full transition-all duration-1000 ${completion === 100 ? 'bg-green-500' : 'bg-brand-primary'}`} style={{width: `${completion}%`}}></div></div>
             </div>
         </div>
 
-        {/* Tarjeta Innovadora "QR" (Estado de IA) */}
         <div className="bg-gradient-to-br from-violet-900/50 to-brand-dark border border-brand-primary/30 rounded-2xl p-6 text-center">
-            <div className="w-12 h-12 bg-brand-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3 text-brand-primary">
-                <Sparkles />
-            </div>
-            <h3 className="font-bold text-white mb-1">
-                {completion >= 80 ? 'IA Activada 🚀' : 'IA en Espera'}
-            </h3>
-            <p className="text-xs text-slate-400 mb-4">
-                {completion >= 80 
-                    ? "Tu perfil está optimizado. Estamos buscando las mejores vacantes para ti." 
-                    : "Completa tu perfil para que nuestra IA pueda empezar a buscar por ti 24/7."}
-            </p>
-            {completion < 80 && (
-                <Link to="/candidate/cv" className="block w-full py-2 bg-brand-primary hover:bg-violet-600 text-white text-sm font-bold rounded-lg transition-colors">
-                    Activar Búsqueda
-                </Link>
-            )}
+            <div className="w-12 h-12 bg-brand-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3 text-brand-primary"><Sparkles /></div>
+            <h3 className="font-bold text-white mb-1">{completion >= 80 ? 'IA Activada 🚀' : 'IA en Espera'}</h3>
+            <p className="text-xs text-slate-400 mb-4">{completion >= 80 ? "Tu perfil está optimizado. Estamos buscando las mejores vacantes." : "Completa tu perfil para que nuestra IA pueda empezar a buscar por ti."}</p>
         </div>
-
       </div>
 
-      {/* --- COLUMNA DERECHA (Contenido Principal) --- */}
+      {/* COLUMNA DERECHA (Contenido) */}
       <div className="lg:col-span-9 space-y-6">
-        
-        {/* Mensaje de Bienvenida */}
         <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                ¡Bienvenido, {userLocal.name?.split(' ')[0]}!
-            </h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">¡Bienvenido/a, {userLocal.name?.split(' ')[0]}!</h1>
             <p className="text-slate-400">Aquí tienes lo que necesitas para comenzar tu búsqueda.</p>
         </div>
 
-        {/* --- TARJETA DE ACCIÓN PRINCIPAL (Subir CV) --- */}
         {!profile?.cv_url && (
             <Link to="/candidate/cv" className="block">
                 <div className="bg-gradient-to-r from-blue-600/20 to-brand-primary/20 border border-blue-500/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-blue-500/50 transition-all cursor-pointer group">
                     <div className="flex items-center gap-5">
-                        <div className="p-4 bg-blue-500 rounded-full text-white shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
-                            <UploadCloud size={24} />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">Sube tu CV y ahorra tiempo</h3>
-                            <p className="text-slate-400 text-sm">Nuestra IA extraerá tus datos automáticamente.</p>
-                        </div>
+                        <div className="p-4 bg-blue-500 rounded-full text-white shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform"><UploadCloud size={24} /></div>
+                        <div><h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">Sube tu CV y ahorra tiempo</h3><p className="text-slate-400 text-sm">Nuestra IA extraerá tus datos automáticamente.</p></div>
                     </div>
-                    <div className="p-2 bg-white/5 rounded-full text-slate-300 group-hover:bg-white/10 group-hover:text-white transition-colors">
-                        <ChevronRight />
-                    </div>
+                    <div className="p-2 bg-white/5 rounded-full text-slate-300 group-hover:bg-white/10 group-hover:text-white transition-colors"><ChevronRight /></div>
                 </div>
             </Link>
         )}
 
-        {/* Lista de Tareas (Completar manualmente) */}
-        {completion < 100 && (
-            <div className="bg-brand-surface/50 border border-white/5 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-bold text-white flex items-center gap-2">
-                        <Edit3 size={18} className="text-brand-secondary"/>
-                        Completa tu perfil manualmente
-                    </h3>
-                    <span className="text-xs text-brand-secondary font-bold">{(100 - completion) / 20} pasos pendientes</span>
-                </div>
-
-                <div className="space-y-4">
-                    {!profile?.phone && (
-                        <Link to="/candidate/cv" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                            <div className="w-6 h-6 rounded-full border-2 border-slate-600 flex-shrink-0 group-hover:border-brand-primary transition-colors"></div>
-                            <span className="text-slate-300 group-hover:text-white flex-1">Agrega tu número de teléfono</span>
-                            <ChevronRight size={16} className="text-slate-600 group-hover:text-white opacity-0 group-hover:opacity-100 transition-all" />
-                        </Link>
-                    )}
-                    {!profile?.location && (
-                        <Link to="/candidate/cv" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                            <div className="w-6 h-6 rounded-full border-2 border-slate-600 flex-shrink-0 group-hover:border-brand-primary transition-colors"></div>
-                            <span className="text-slate-300 group-hover:text-white flex-1">Selecciona tu ubicación</span>
-                            <ChevronRight size={16} className="text-slate-600 group-hover:text-white opacity-0 group-hover:opacity-100 transition-all" />
-                        </Link>
-                    )}
-                    {(!profile?.skills || profile.skills.length === 0) && (
-                        <Link to="/candidate/cv" className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                            <div className="w-6 h-6 rounded-full border-2 border-slate-600 flex-shrink-0 group-hover:border-brand-primary transition-colors"></div>
-                            <span className="text-slate-300 group-hover:text-white flex-1">Agrega tus habilidades clave</span>
-                            <ChevronRight size={16} className="text-slate-600 group-hover:text-white opacity-0 group-hover:opacity-100 transition-all" />
-                        </Link>
-                    )}
-                    
-                    <div className="flex items-center gap-4 p-3 rounded-xl opacity-50">
-                        <CheckCircle2 className="text-green-500 w-6 h-6 flex-shrink-0" />
-                        <span className="text-slate-400 line-through flex-1">Crear cuenta de usuario</span>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {/* --- SECCIÓN DE SUGERENCIAS REALES (Con Match de IA) --- */}
+        {/* SECCIÓN SUGERENCIAS */}
         <div>
             <div className="flex items-center gap-2 mb-4 mt-8">
                 <h3 className="font-bold text-white text-lg">Sugerencias para ti</h3>
@@ -256,24 +154,19 @@ const DashboardHome = () => {
             <div className="space-y-4">
                 {vacancies.length === 0 ? (
                     <div className="text-center py-10 text-slate-500 italic border border-white/5 rounded-2xl">
-                        No hay vacantes disponibles o compatibles aún.
+                        No hay vacantes sugeridas disponibles en este momento.
                     </div>
                 ) : (
                     vacancies.map((job) => (
-                        <div key={job._id} className="bg-brand-surface border border-white/5 rounded-2xl p-6 hover:border-brand-primary/50 transition-all">
+                        <div key={job._id} className="bg-brand-surface border border-white/5 rounded-2xl p-6 hover:border-brand-primary/50 transition-all animate-in fade-in slide-in-from-bottom-2">
                             <div className="flex flex-col md:flex-row justify-between gap-4">
-                                
-                                {/* Info Principal */}
                                 <div className="flex gap-4">
                                     <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center flex-shrink-0 text-xl font-bold text-slate-900">
-                                        {/* Inicial de la Empresa */}
                                         {job.created_by?.companyName?.charAt(0) || 'E'}
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-white text-lg hover:text-brand-secondary cursor-pointer">{job.title}</h4>
-                                        <p className="text-brand-secondary text-sm font-medium mb-1">
-                                            {job.created_by?.companyName || 'Empresa Confidencial'}
-                                        </p>
+                                        <p className="text-brand-secondary text-sm font-medium mb-1">{job.created_by?.companyName || 'Empresa Confidencial'}</p>
                                         <div className="flex flex-wrap gap-3 text-xs text-slate-400">
                                             <span className="flex items-center gap-1"><MapPin size={12}/> {job.modality}</span>
                                             <span className="flex items-center gap-1"><Briefcase size={12}/> Tiempo completo</span>
@@ -282,37 +175,32 @@ const DashboardHome = () => {
                                     </div>
                                 </div>
 
-                                {/* Botones de Acción */}
                                 <div className="flex flex-row md:flex-col items-end gap-3 justify-between">
-                                     {/* Puntaje de Match */}
-                                     <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-bold border ${
-                                         job.matchScore >= 80 
-                                         ? 'bg-green-500/10 text-green-400 border-green-500/20' 
-                                         : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-                                     }`}>
-                                        <Sparkles size={12} /> {job.matchScore}% de Match
+                                     <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-bold border ${job.matchScore >= 80 ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'}`}>
+                                        <Sparkles size={12} /> {job.matchScore}% Match
                                      </div>
-                                     
                                      <div className="flex gap-2 w-full md:w-auto">
-                                        <button className="flex-1 md:flex-none px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-500 text-sm font-medium transition-colors">
-                                            Descartar
+                                        
+                                        {/* --- BOTÓN DESCARTAR FUNCIONAL --- */}
+                                        <button 
+                                            onClick={() => handleDiscard(job._id)}
+                                            className="flex-1 md:flex-none px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                            title="No me interesa esta vacante"
+                                        >
+                                            <XCircle size={16} /> Descartar
                                         </button>
+                                        
                                         <Link to="/candidate/search" className="flex-1 md:flex-none px-4 py-2 rounded-lg bg-brand-primary hover:bg-violet-600 text-white text-sm font-bold shadow-lg shadow-brand-primary/20 transition-colors text-center">
                                             Ver vacante
                                         </Link>
                                      </div>
                                 </div>
-
                             </div>
                             
-                            {/* Explicación de IA (Innovador) */}
                             {profile && job.skills_required && job.skills_required.length > 0 && (
                                 <div className="mt-4 pt-4 border-t border-white/5 text-xs text-slate-500 flex gap-2">
                                     <Brain size={14} className="text-brand-accent flex-shrink-0"/>
-                                    <span>
-                                        La IA te recomienda esto porque dominas <strong>{job.skills_required[0]}</strong> 
-                                        {profile.location ? ` y buscas cerca de ${profile.location}.` : '.'}
-                                    </span>
+                                    <span>La IA te recomienda esto porque dominas <strong>{job.skills_required[0]}</strong>.</span>
                                 </div>
                             )}
                         </div>
@@ -320,9 +208,7 @@ const DashboardHome = () => {
                 )}
             </div>
         </div>
-
       </div>
-
     </div>
   );
 }

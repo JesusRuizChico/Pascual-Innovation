@@ -76,3 +76,24 @@ exports.updateProfile = async (req, res) => {
         res.status(500).send('Error del servidor');
     }
 };
+
+// ... (código anterior) ...
+
+// --- DESCARTAR UNA VACANTE ---
+exports.discardVacancy = async (req, res) => {
+    try {
+        const { vacancyId } = req.params;
+        
+        // Usamos $addToSet para no agregar el mismo ID dos veces
+        await Candidate.findOneAndUpdate(
+            { user: req.user.id },
+            { $addToSet: { rejected_vacancies: vacancyId } }
+        );
+
+        res.json({ msg: 'Vacante descartada exitosamente' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error al descartar vacante');
+    }
+};

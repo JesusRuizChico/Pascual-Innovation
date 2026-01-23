@@ -71,4 +71,14 @@ router.post('/upload-photo', auth, upload.single('photo'), async (req, res) => {
     }
 });
 
+
+
+// ...
+
+
+// --- NUEVA RUTA ---
+router.put('/discard/:vacancyId', auth, candidateController.discardVacancy);
+// ------------------
+
+
 module.exports = router;

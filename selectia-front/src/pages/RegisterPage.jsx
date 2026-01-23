@@ -1,16 +1,17 @@
 // src/pages/RegisterPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Brain, Mail, Lock, User, Building2, ArrowLeft, Briefcase, FileText, Loader2 } from 'lucide-react';
-import axios from '../api/axios'; // Importamos nuestra configuración
+import { Brain, Mail, Lock, User, Building2, ArrowLeft, Briefcase, FileText, Loader2, CheckCircle2 } from 'lucide-react';
+// CORRECCIÓN AQUÍ: Solo un "../"
+import axios from '../api/axios';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [role, setRole] = useState('candidate');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [serverError, setServerError] = useState('');
+  const [errors, setErrors] = useState({});
 
-  // Estado para guardar los datos del formulario
   const [formData, setFormData] = useState({
     name: '',
     lastname: '',
@@ -20,42 +21,64 @@ const RegisterPage = () => {
     rfc: ''
   });
 
-  // Manejar cambios en los inputs
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+  const validate = () => {
+      const newErrors = {};
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!formData.name.trim()) newErrors.name = "El nombre es obligatorio.";
+      if (!formData.lastname.trim()) newErrors.lastname = "El apellido es obligatorio.";
+      
+      if (!formData.email) {
+          newErrors.email = "El correo es obligatorio.";
+      } else if (!emailRegex.test(formData.email)) {
+          newErrors.email = "Ingresa un correo válido.";
+      }
+
+      if (!formData.password) {
+          newErrors.password = "La contraseña es obligatoria.";
+      } else if (formData.password.length < 6) {
+          newErrors.password = "Mínimo 6 caracteres.";
+      }
+
+      if (role === 'recruiter') {
+          if (!formData.companyName.trim()) newErrors.companyName = "El nombre de la empresa es requerido.";
+          if (!formData.rfc.trim()) newErrors.rfc = "El RFC es requerido.";
+          else if (formData.rfc.length < 12 || formData.rfc.length > 13) newErrors.rfc = "RFC inválido (12-13 caracteres).";
+      }
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
   };
 
-  // Enviar datos al Backend
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setServerError('');
+
+    if (!validate()) return;
+
     setLoading(true);
-    setError('');
 
     try {
-      // Preparamos los datos
+      // CORRECCIÓN AQUÍ: Eliminada la duplicidad de 'name'
       const dataToSend = {
-        name: formData.name,
-        lastname: formData.lastname,
+        name: `${formData.name} ${formData.lastname}`,
         email: formData.email,
         password: formData.password,
         role: role,
-        // Solo enviamos estos si es reclutador
         companyName: role === 'recruiter' ? formData.companyName : undefined,
         rfc: role === 'recruiter' ? formData.rfc : undefined
       };
 
-      // PETICIÓN POST AL BACKEND
       const res = await axios.post('/auth/register', dataToSend);
       
-      console.log('Registro exitoso:', res.data);
-      
-      // Guardamos el token (opcional, por si quieres loguearlo directo)
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
 
-      // Redirigir al usuario según su rol
       if (role === 'candidate') {
         navigate('/candidate/dashboard');
       } else {
@@ -64,8 +87,7 @@ const RegisterPage = () => {
 
     } catch (err) {
       console.error(err);
-      // Mostrar el mensaje de error que viene del backend
-      setError(err.response?.data?.msg || 'Error al registrarse. Intenta de nuevo.');
+      setServerError(err.response?.data?.msg || 'Error al registrarse. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -74,7 +96,6 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen bg-brand-dark flex items-center justify-center relative overflow-hidden p-4">
       
-      {/* Fondo Decorativo */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-brand-primary/10 rounded-full blur-[120px]"></div>
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px]"></div>
@@ -91,14 +112,12 @@ const RegisterPage = () => {
           <p className="text-slate-400 mt-2 text-sm">Únete a la red de talento más inteligente</p>
         </div>
 
-        {/* Mensaje de Error */}
-        {error && (
+        {serverError && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg text-center">
-                {error}
+                {serverError}
             </div>
         )}
 
-        {/* Switch de Rol */}
         <div className="bg-brand-dark/50 p-1 rounded-xl flex mb-6 border border-white/5">
             <button 
                 type="button"
@@ -124,24 +143,26 @@ const RegisterPage = () => {
                 <div className="relative group">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input 
-                        type="text" name="name" required
+                        type="text" name="name" 
                         value={formData.name} onChange={handleChange}
                         placeholder="Juan" 
-                        className="w-full bg-brand-dark/50 border border-white/10 rounded-xl px-10 py-3 text-white focus:outline-none focus:border-brand-primary transition-all"
+                        className={`w-full bg-brand-dark/50 border rounded-xl px-10 py-3 text-white focus:outline-none focus:border-brand-primary transition-all ${errors.name ? 'border-red-500' : 'border-white/10'}`}
                     />
                 </div>
+                {errors.name && <p className="text-red-400 text-xs ml-1">{errors.name}</p>}
             </div>
             <div className="space-y-1 flex-1">
                 <label className="text-xs font-bold text-slate-300 ml-1 uppercase tracking-wider">Apellidos</label>
                 <div className="relative group">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input 
-                        type="text" name="lastname" required
+                        type="text" name="lastname" 
                         value={formData.lastname} onChange={handleChange}
                         placeholder="Pérez" 
-                        className="w-full bg-brand-dark/50 border border-white/10 rounded-xl px-10 py-3 text-white focus:outline-none focus:border-brand-primary transition-all"
+                        className={`w-full bg-brand-dark/50 border rounded-xl px-10 py-3 text-white focus:outline-none focus:border-brand-primary transition-all ${errors.lastname ? 'border-red-500' : 'border-white/10'}`}
                     />
                 </div>
+                {errors.lastname && <p className="text-red-400 text-xs ml-1">{errors.lastname}</p>}
             </div>
           </div>
 
@@ -150,26 +171,28 @@ const RegisterPage = () => {
                 <div className="space-y-1 animate-in fade-in slide-in-from-top-2">
                     <label className="text-xs font-bold text-slate-300 ml-1 uppercase tracking-wider text-brand-secondary">Empresa</label>
                     <div className="relative group">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <input 
-                        type="text" name="companyName" required
-                        value={formData.companyName} onChange={handleChange}
-                        placeholder="Innovation Pascual S.A." 
-                        className="w-full bg-brand-dark/50 border border-brand-secondary/30 rounded-xl px-10 py-3 text-white focus:outline-none focus:border-brand-secondary transition-all"
-                    />
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                        <input 
+                            type="text" name="companyName" 
+                            value={formData.companyName} onChange={handleChange}
+                            placeholder="Innovation Pascual S.A." 
+                            className={`w-full bg-brand-dark/50 border rounded-xl px-10 py-3 text-white focus:outline-none focus:border-brand-secondary transition-all ${errors.companyName ? 'border-red-500' : 'border-brand-secondary/30'}`}
+                        />
                     </div>
+                    {errors.companyName && <p className="text-red-400 text-xs ml-1">{errors.companyName}</p>}
                 </div>
                 <div className="space-y-1 animate-in fade-in slide-in-from-top-2">
                     <label className="text-xs font-bold text-slate-300 ml-1 uppercase tracking-wider text-brand-secondary">RFC</label>
                     <div className="relative group">
-                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <input 
-                        type="text" name="rfc" required maxLength={13}
-                        value={formData.rfc} onChange={handleChange}
-                        placeholder="IPX990101AAA" 
-                        className="w-full bg-brand-dark/50 border border-brand-secondary/30 rounded-xl px-10 py-3 text-white uppercase focus:outline-none focus:border-brand-secondary transition-all"
-                    />
+                        <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                        <input 
+                            type="text" name="rfc" maxLength={13}
+                            value={formData.rfc} onChange={handleChange}
+                            placeholder="IPX990101AAA" 
+                            className={`w-full bg-brand-dark/50 border rounded-xl px-10 py-3 text-white uppercase focus:outline-none focus:border-brand-secondary transition-all ${errors.rfc ? 'border-red-500' : 'border-brand-secondary/30'}`}
+                        />
                     </div>
+                    {errors.rfc && <p className="text-red-400 text-xs ml-1">{errors.rfc}</p>}
                 </div>
             </>
           )}
@@ -179,12 +202,13 @@ const RegisterPage = () => {
             <div className="relative group">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input 
-                type="email" name="email" required
+                type="email" name="email" 
                 value={formData.email} onChange={handleChange}
                 placeholder="ejemplo@correo.com" 
-                className="w-full bg-brand-dark/50 border border-white/10 rounded-xl px-10 py-3 text-white focus:outline-none focus:border-brand-primary transition-all"
+                className={`w-full bg-brand-dark/50 border rounded-xl px-10 py-3 text-white focus:outline-none focus:border-brand-primary transition-all ${errors.email ? 'border-red-500' : 'border-white/10'}`}
               />
             </div>
+            {errors.email && <p className="text-red-400 text-xs ml-1">{errors.email}</p>}
           </div>
 
           <div className="space-y-1">
@@ -192,12 +216,13 @@ const RegisterPage = () => {
             <div className="relative group">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input 
-                type="password" name="password" required
+                type="password" name="password" 
                 value={formData.password} onChange={handleChange}
                 placeholder="••••••••" 
-                className="w-full bg-brand-dark/50 border border-white/10 rounded-xl px-10 py-3 text-white focus:outline-none focus:border-brand-primary transition-all"
+                className={`w-full bg-brand-dark/50 border rounded-xl px-10 py-3 text-white focus:outline-none focus:border-brand-primary transition-all ${errors.password ? 'border-red-500' : 'border-white/10'}`}
               />
             </div>
+            {errors.password && <p className="text-red-400 text-xs ml-1">{errors.password}</p>}
           </div>
 
           <button 

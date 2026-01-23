@@ -1,11 +1,18 @@
 // src/pages/LandingPage.jsx
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // Importamos Link para navegar
-import { Search, MapPin, Brain, Menu, X, ChevronRight, Briefcase, Code, Users, BarChart3, Building2, CheckCircle2, ArrowRight, CircleUser, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom'; 
+import { 
+  Search, MapPin, Brain, Menu, X, ChevronRight, Briefcase, Code, 
+  Users, BarChart3, Building2, CheckCircle2, ArrowRight, CircleUser, 
+  Sparkles, Linkedin, Twitter, Instagram, ShieldCheck, FileText 
+} from 'lucide-react';
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('candidato');
+  
+  // Estado para el Modal de Legales (Igual que en el Layout)
+  const [modalContent, setModalContent] = useState(null);
 
   // Datos simulados (Categorías)
   const categories = [
@@ -15,8 +22,38 @@ const LandingPage = () => {
     { title: "Ingeniería Industrial", count: "+930 vacantes", icon: <Building2 className="w-6 h-6" />, color: "text-orange-400", border: "hover:border-orange-500/50" },
   ];
 
-  // Empresas para el carrusel
-  const companies = ["Google", "Microsoft", "Tesla", "Amazon", "Samsung", "Oracle", "IBM", "Intel", "SpaceX", "Meta", "Nvidia", "AMD"];
+  // Logos de Empresas
+  const companies = [
+    { name: "Google", url: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" },
+    { name: "Microsoft", url: "https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg" },
+    { name: "Amazon", url: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" },
+    { name: "IBM", url: "https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg" },
+    { name: "Oracle", url: "https://upload.wikimedia.org/wikipedia/commons/5/50/Oracle_logo.svg" },
+    { name: "Samsung", url: "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg" },
+    { name: "Spotify", url: "https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg" },
+    { name: "Tesla", url: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png" }
+  ];
+
+  // --- LÓGICA DEL MODAL ---
+  const handleOpenModal = (type) => {
+      let content = { title: '', body: '' };
+      switch(type) {
+          case 'terms':
+              content = { 
+                  title: 'Términos y Condiciones', 
+                  body: 'Bienvenido a SelectIA. Al utilizar nuestra plataforma, aceptas que tus datos serán procesados por nuestros algoritmos de IA para fines de reclutamiento. Garantizamos la confidencialidad de tu información personal y profesional.' 
+              };
+              break;
+          case 'privacy':
+              content = { 
+                  title: 'Aviso de Privacidad', 
+                  body: 'En SelectIA, nos tomamos muy en serio tu privacidad. Tus datos personales están encriptados y solo se comparten con empresas verificadas cuando te postulas a una vacante. Cumplimos con la normativa vigente de protección de datos.' 
+              };
+              break;
+          default: return;
+      }
+      setModalContent(content);
+  };
 
   return (
     <div className="min-h-screen bg-brand-dark text-slate-200 font-sans selection:bg-brand-primary selection:text-white flex flex-col">
@@ -34,21 +71,18 @@ const LandingPage = () => {
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
-            {/* LINK ACTUALIZADO: Soy Reclutador -> Lleva a registro (donde pueden elegir rol) */}
             <Link to="/register" className="text-sm font-medium hover:text-white transition-colors">
                 Soy Reclutador
             </Link>
-            
-            <a href="#" className="text-sm font-medium hover:text-white transition-colors">Ayuda</a>
+            {/* El botón de ayuda ahora puede abrir el modal de contacto o llevar al login si es ayuda técnica */}
+            <Link to="/login" className="text-sm font-medium hover:text-white transition-colors">Ayuda</Link>
             
             <div className="h-5 w-px bg-white/10"></div>
             
-            {/* LINK ACTUALIZADO: Regístrate -> Lleva a /register */}
             <Link to="/register" className="text-sm font-medium hover:text-white transition-colors">
                 Regístrate
             </Link>
             
-            {/* Botón Login que redirige */}
             <Link to="/login">
                 <button className="bg-transparent border border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white px-6 py-2 rounded-full font-bold transition-all text-sm">
                 Iniciar Sesión
@@ -63,13 +97,10 @@ const LandingPage = () => {
           </div>
         </div>
         
-        {/* Menú Móvil */}
         {isMenuOpen && (
             <div className="absolute top-20 left-0 w-full bg-brand-surface border-b border-white/10 p-4 flex flex-col gap-4 md:hidden shadow-2xl">
-                {/* LINKS ACTUALIZADOS EN MÓVIL */}
                 <Link to="/register" className="block py-2 hover:text-brand-primary transition-colors">Soy Reclutador</Link>
                 <Link to="/register" className="block py-2 hover:text-brand-primary transition-colors">Regístrate</Link>
-                
                 <Link to="/login" className="w-full bg-brand-primary py-3 rounded-lg font-bold text-white text-center block">
                     Iniciar Sesión
                 </Link>
@@ -99,29 +130,37 @@ const LandingPage = () => {
               <MapPin className="text-brand-primary w-5 h-5 mr-3" />
               <input type="text" placeholder="Ciudad o Estado" className="w-full outline-none text-gray-800 placeholder-gray-400 font-medium" />
             </div>
-            <button className="w-full md:w-auto bg-brand-primary hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition-all shadow-lg text-lg">
-              Buscar
-            </button>
+            <Link to="/login" className="w-full md:w-auto">
+                <button className="w-full bg-brand-primary hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition-all shadow-lg text-lg">
+                Buscar
+                </button>
+            </Link>
           </div>
 
           <div className="mt-8 flex justify-center gap-4 text-sm text-slate-500">
-             <span className="hidden md:inline">Tendencias:</span>
-             <span className="text-brand-secondary cursor-pointer hover:underline">Programador Java</span>
-             <span className="text-brand-secondary cursor-pointer hover:underline">Ventas</span>
-             <span className="text-brand-secondary cursor-pointer hover:underline">Contador</span>
+              <span className="hidden md:inline">Tendencias:</span>
+              <span className="text-brand-secondary cursor-pointer hover:underline">Programador Java</span>
+              <span className="text-brand-secondary cursor-pointer hover:underline">Ventas</span>
+              <span className="text-brand-secondary cursor-pointer hover:underline">Contador</span>
           </div>
         </div>
       </div>
 
-      {/* --- CARRUSEL --- */}
+      {/* --- CARRUSEL DE LOGOS --- */}
       <div className="w-full bg-brand-surface/50 border-y border-white/5 py-10 overflow-hidden">
-        <p className="text-center text-slate-500 text-xs font-bold tracking-[0.2em] mb-8 uppercase">Confían en nuestro talento</p>
+        <p className="text-center text-slate-500 text-xs font-bold tracking-[0.2em] mb-10 uppercase">
+            Confían en nuestro talento
+        </p>
         <div className="relative flex overflow-x-hidden group">
-          <div className="animate-scroll whitespace-nowrap flex gap-16 items-center">
+          <div className="animate-scroll whitespace-nowrap flex gap-20 items-center pl-10">
             {[...companies, ...companies].map((company, index) => (
-              <span key={index} className="text-2xl md:text-3xl font-bold text-slate-600 hover:text-white transition-colors cursor-default">
-                {company}
-              </span>
+              <img 
+                key={index} 
+                src={company.url} 
+                alt={company.name} 
+                className="h-8 w-auto object-contain opacity-50 hover:opacity-100 transition-all duration-300 grayscale brightness-0 invert cursor-pointer"
+                title={company.name}
+              />
             ))}
           </div>
           <div className="absolute top-0 left-0 h-full w-32 bg-gradient-to-r from-brand-dark to-transparent z-10"></div>
@@ -134,7 +173,6 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-16 items-center">
                 
-                {/* Avatar Abstracto */}
                 <div className="relative group aspect-[4/3] flex items-center justify-center bg-brand-surface/30 rounded-3xl border border-white/10 overflow-hidden">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-brand-primary/20 rounded-full blur-[100px] group-hover:bg-brand-primary/30 transition-all duration-1000"></div>
                     <div className="relative z-10 flex flex-col items-center justify-center p-10 rounded-full bg-gradient-to-b from-white/10 to-transparent border border-white/20 backdrop-blur-sm shadow-2xl shadow-brand-primary/20 group-hover:scale-105 transition-transform">
@@ -146,14 +184,13 @@ const LandingPage = () => {
                     <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-brand-dark/50 to-transparent"></div>
                 </div>
 
-                {/* Texto Persuasivo */}
                 <div>
                     <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
                         Comienza tu <br/>
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-accent to-brand-secondary">historia de éxito</span>
                     </h2>
                     <p className="text-slate-400 text-lg mb-8 leading-relaxed">
-                        En SelectIA, no solo buscas empleo; dejas que el empleo ideal te encuentre a ti. Nuestra Inteligencia Artificial analiza tu perfil y lo conecta instantáneamente con las vacantes que encajan con tus habilidades y expectativas salariales.
+                        En SelectIA, no solo buscas empleo; dejas que el empleo ideal te encuentre a ti. Nuestra Inteligencia Artificial analiza tu perfil y lo conecta instantáneamente con las vacantes.
                     </p>
                     <ul className="space-y-4 mb-8">
                         <li className="flex items-start gap-3">
@@ -162,7 +199,7 @@ const LandingPage = () => {
                         </li>
                         <li className="flex items-start gap-3">
                             <CheckCircle2 className="text-brand-primary w-6 h-6 shrink-0" />
-                            <span className="text-slate-300">Recibe alertas personalizadas por WhatsApp.</span>
+                            <span className="text-slate-300">Recibe alertas personalizadas.</span>
                         </li>
                         <li className="flex items-start gap-3">
                             <CheckCircle2 className="text-brand-primary w-6 h-6 shrink-0" />
@@ -170,7 +207,6 @@ const LandingPage = () => {
                         </li>
                     </ul>
                     
-                    {/* LINK ACTUALIZADO: Botón principal lleva a registro */}
                     <Link to="/register">
                         <button className="bg-white text-brand-dark hover:bg-brand-accent hover:text-white px-8 py-3 rounded-lg font-bold transition-all flex items-center gap-2 group">
                             Crear mi cuenta gratis
@@ -197,16 +233,16 @@ const LandingPage = () => {
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">{cat.title}</h3>
                 <p className={`text-sm font-medium ${cat.color} opacity-80 mb-4`}>{cat.count}</p>
-                <div className="flex items-center text-slate-500 text-sm font-medium group-hover:text-white transition-colors">
+                <Link to="/login" className="flex items-center text-slate-500 text-sm font-medium group-hover:text-white transition-colors">
                   Ver vacantes <ChevronRight className="w-4 h-4 ml-1" />
-                </div>
+                </Link>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* --- PESTAÑAS AYUDA --- */}
+      {/* --- PESTAÑAS AYUDA (Contenido resumido) --- */}
       <div className="py-24 bg-brand-dark">
           <div className="max-w-4xl mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold text-white mb-10">¿Cómo te ayuda SelectIA?</h2>
@@ -227,40 +263,41 @@ const LandingPage = () => {
                 </div>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
+                {/* (Contenido de las pestañas igual que antes, solo visual) */}
                 {activeTab === 'candidato' ? (
                     <>
-                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5 hover:border-brand-primary/30 transition-colors">
+                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5">
                             <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-4 text-purple-400"><Brain /></div>
                             <h3 className="text-white font-bold mb-2">Match con IA</h3>
-                            <p className="text-slate-400 text-sm">Nuestro algoritmo analiza tu CV y te sugiere solo las vacantes donde tienes altas probabilidades.</p>
+                            <p className="text-slate-400 text-sm">Nuestro algoritmo analiza tu CV y te sugiere vacantes ideales.</p>
                         </div>
-                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5 hover:border-brand-primary/30 transition-colors">
+                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5">
                             <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mx-auto mb-4 text-blue-400"><MapPin /></div>
                             <h3 className="text-white font-bold mb-2">Empleo Local</h3>
-                            <p className="text-slate-400 text-sm">Filtros especializados para encontrar vacantes cerca de tu domicilio en Querétaro.</p>
+                            <p className="text-slate-400 text-sm">Vacantes cerca de tu domicilio en Querétaro y el Bajío.</p>
                         </div>
-                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5 hover:border-brand-primary/30 transition-colors">
+                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5">
                             <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mx-auto mb-4 text-green-400"><BarChart3 /></div>
                             <h3 className="text-white font-bold mb-2">Salarios Claros</h3>
-                            <p className="text-slate-400 text-sm">Conoce el rango salarial antes de postularte y compara con el mercado.</p>
+                            <p className="text-slate-400 text-sm">Conoce el rango salarial antes de postularte.</p>
                         </div>
                     </>
                 ) : (
                     <>
-                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5 hover:border-brand-secondary/30 transition-colors">
+                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5">
                             <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center mx-auto mb-4 text-orange-400"><Users /></div>
                             <h3 className="text-white font-bold mb-2">Base de Talentos</h3>
-                            <p className="text-slate-400 text-sm">Accede a una base de datos de más de 10,000 profesionales activos en la región.</p>
+                            <p className="text-slate-400 text-sm">Acceso a miles de profesionales activos en la región.</p>
                         </div>
-                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5 hover:border-brand-secondary/30 transition-colors">
+                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5">
                             <div className="w-12 h-12 bg-pink-500/20 rounded-lg flex items-center justify-center mx-auto mb-4 text-pink-400"><Briefcase /></div>
                             <h3 className="text-white font-bold mb-2">Gestión ATS</h3>
-                            <p className="text-slate-400 text-sm">Organiza a tus candidatos por etapas (entrevista, pruebas, contratado) en un solo panel.</p>
+                            <p className="text-slate-400 text-sm">Organiza a tus candidatos por etapas en un solo panel.</p>
                         </div>
-                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5 hover:border-brand-secondary/30 transition-colors">
+                        <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5">
                             <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center mx-auto mb-4 text-cyan-400"><Brain /></div>
                             <h3 className="text-white font-bold mb-2">Filtrado Automático</h3>
-                            <p className="text-slate-400 text-sm">Deja que la IA lea los CVs por ti y te presente solo a los mejores 5 candidatos.</p>
+                            <p className="text-slate-400 text-sm">Deja que la IA lea los CVs y te presente los mejores.</p>
                         </div>
                     </>
                 )}
@@ -268,75 +305,90 @@ const LandingPage = () => {
           </div>
       </div>
 
-      {/* --- FOOTER --- */}
-      <footer className="bg-black py-16 border-t border-white/10 text-sm">
-        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
-          
-          <div className="col-span-1 md:col-span-1">
-             <div className="flex items-center gap-2 mb-6">
-                <Brain className="text-brand-primary w-6 h-6" />
-                <span className="font-bold text-xl text-white">SelectIA</span>
-             </div>
-             <p className="text-slate-500 mb-6 leading-relaxed">
-                Transformando el reclutamiento en México mediante tecnología, transparencia y eficiencia.
-             </p>
-             <div className="flex gap-4">
-                <div className="w-8 h-8 bg-brand-surface rounded-full flex items-center justify-center text-slate-400 hover:bg-brand-primary hover:text-white transition-colors cursor-pointer">IG</div>
-                <div className="w-8 h-8 bg-brand-surface rounded-full flex items-center justify-center text-slate-400 hover:bg-brand-primary hover:text-white transition-colors cursor-pointer">LI</div>
-                <div className="w-8 h-8 bg-brand-surface rounded-full flex items-center justify-center text-slate-400 hover:bg-brand-primary hover:text-white transition-colors cursor-pointer">X</div>
-             </div>
-          </div>
+      {/* --- FOOTER OPTIMIZADO --- */}
+      <footer className="bg-black py-12 border-t border-white/10 text-sm">
+        <div className="max-w-7xl mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+            
+                {/* Columna 1: Marca y Redes */}
+                <div className="col-span-1">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Brain className="text-brand-primary w-6 h-6" />
+                        <span className="font-bold text-xl text-white">SelectIA</span>
+                    </div>
+                    <p className="text-slate-500 mb-6 leading-relaxed max-w-xs">
+                        La plataforma de reclutamiento inteligente que conecta el mejor talento con las empresas más innovadoras de México.
+                    </p>
+                    <div className="flex gap-4">
+                        <a href="#" className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all"><Linkedin size={18}/></a>
+                        <a href="#" className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-slate-400 hover:bg-sky-500 hover:text-white transition-all"><Twitter size={18}/></a>
+                        <a href="#" className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-slate-400 hover:bg-pink-600 hover:text-white transition-all"><Instagram size={18}/></a>
+                    </div>
+                </div>
 
-          <div>
-             <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-xs">Candidatos</h4>
-             <ul className="space-y-3 text-slate-500">
-                <li><a href="#" className="hover:text-brand-primary transition-colors">Buscar empleo</a></li>
-                <li><a href="#" className="hover:text-brand-primary transition-colors">Salarios</a></li>
-                <li><a href="#" className="hover:text-brand-primary transition-colors">Blog de carrera</a></li>
-                <li><a href="#" className="hover:text-brand-primary transition-colors">Empresas TOP</a></li>
-             </ul>
-          </div>
+                {/* Columna 2: Candidatos (Links Funcionales) */}
+                <div>
+                    <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-xs flex items-center gap-2">
+                        <CircleUser size={14} className="text-brand-primary"/> Candidatos
+                    </h4>
+                    <ul className="space-y-3 text-slate-500">
+                        <li><Link to="/login" className="hover:text-white transition-colors flex items-center gap-2 hover:translate-x-1 duration-300">Buscar empleo</Link></li>
+                        <li><Link to="/register" className="hover:text-white transition-colors flex items-center gap-2 hover:translate-x-1 duration-300">Crear cuenta gratis</Link></li>
+                        <li><Link to="/login" className="hover:text-white transition-colors flex items-center gap-2 hover:translate-x-1 duration-300">Subir CV</Link></li>
+                    </ul>
+                </div>
 
-          <div>
-             <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-xs">Reclutadores</h4>
-             <ul className="space-y-3 text-slate-500">
-                <li><a href="#" className="hover:text-brand-primary transition-colors">Publicar vacante</a></li>
-                <li><a href="#" className="hover:text-brand-primary transition-colors">Soluciones de IA</a></li>
-                <li><a href="#" className="hover:text-brand-primary transition-colors">Precios</a></li>
-                <li><a href="#" className="hover:text-brand-primary transition-colors">Acceso Clientes</a></li>
-             </ul>
-          </div>
+                {/* Columna 3: Empresas (Links Funcionales) */}
+                <div>
+                    <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-xs flex items-center gap-2">
+                        <Briefcase size={14} className="text-brand-secondary"/> Empresas
+                    </h4>
+                    <ul className="space-y-3 text-slate-500">
+                        <li><Link to="/register" className="hover:text-white transition-colors flex items-center gap-2 hover:translate-x-1 duration-300">Publicar vacante</Link></li>
+                        <li><Link to="/login" className="hover:text-white transition-colors flex items-center gap-2 hover:translate-x-1 duration-300">Ingreso Reclutadores</Link></li>
+                        <li><Link to="/login" className="hover:text-white transition-colors flex items-center gap-2 hover:translate-x-1 duration-300">Soporte Empresarial</Link></li>
+                    </ul>
+                </div>
 
-          <div>
-            <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-xs">Disponible en</h4>
-            <div className="flex flex-col gap-3">
-              <button className="bg-slate-900 border border-white/20 rounded-xl p-3 flex items-center gap-3 hover:bg-slate-800 transition-colors group">
-                 <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg pb-1 group-hover:scale-110 transition-transform">A</div>
-                 <div className="text-left">
-                    <div className="text-[10px] text-slate-400">Consíguelo en el</div>
-                    <div className="font-bold text-white text-sm">App Store</div>
-                 </div>
-              </button>
-              <button className="bg-slate-900 border border-white/20 rounded-xl p-3 flex items-center gap-3 hover:bg-slate-800 transition-colors group">
-                 <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg pb-1 group-hover:scale-110 transition-transform">G</div>
-                 <div className="text-left">
-                    <div className="text-[10px] text-slate-400">DISPONIBLE EN</div>
-                    <div className="font-bold text-white text-sm">Google Play</div>
-                 </div>
-              </button>
             </div>
-          </div>
 
-        </div>
-        <div className="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-xs text-slate-600">
-          <p>© 2025 Innovation Pascual S.A. de C.V.</p>
-          <div className="flex gap-6 mt-4 md:mt-0">
-             <a href="#" className="hover:text-slate-400">Aviso de Privacidad</a>
-             <a href="#" className="hover:text-slate-400">Términos y Condiciones</a>
-             <a href="#" className="hover:text-slate-400">Mapa del sitio</a>
-          </div>
+            {/* Barra Inferior (Legales Funcionales) */}
+            <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-xs text-slate-600 gap-4">
+                <p>© 2025 Innovation Pascual S.A. de C.V. Todos los derechos reservados.</p>
+                <div className="flex flex-wrap gap-6 justify-center">
+                    <button onClick={() => handleOpenModal('privacy')} className="hover:text-slate-300 transition-colors flex items-center gap-1">
+                        <ShieldCheck size={14}/> Aviso de Privacidad
+                    </button>
+                    <button onClick={() => handleOpenModal('terms')} className="hover:text-slate-300 transition-colors flex items-center gap-1">
+                        <FileText size={14}/> Términos y Condiciones
+                    </button>
+                </div>
+            </div>
         </div>
       </footer>
+
+      {/* --- MODAL FLOTANTE (Legales) --- */}
+      {modalContent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full p-8 relative">
+                  <button onClick={() => setModalContent(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white bg-white/5 p-1 rounded-full">
+                      <X size={20} />
+                  </button>
+                  <div className="flex items-center gap-3 mb-6">
+                      <div className="p-3 bg-brand-primary/20 rounded-xl text-brand-primary">
+                          <ShieldCheck size={24} />
+                      </div>
+                      <h3 className="text-2xl font-bold text-white">{modalContent.title}</h3>
+                  </div>
+                  <p className="text-slate-300 text-sm leading-relaxed mb-8">
+                      {modalContent.body}
+                  </p>
+                  <button onClick={() => setModalContent(null)} className="w-full py-3 bg-brand-primary hover:bg-violet-600 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-brand-primary/20">
+                      Entendido
+                  </button>
+              </div>
+          </div>
+      )}
 
     </div>
   );
