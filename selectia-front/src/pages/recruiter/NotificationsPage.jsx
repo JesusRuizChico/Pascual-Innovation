@@ -1,142 +1,120 @@
-// src/pages/recruiter/NotificationsPage.jsx
 import React, { useState, useEffect } from 'react';
-import { Bell, Check, Trash2, User, Briefcase, Info, Loader2, CheckCircle2 } from 'lucide-react';
+import { Bell, Check, Clock, Info, AlertTriangle, CheckCircle } from 'lucide-react';
 import axios from '../../api/axios';
 
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Cargar notificaciones
+  // Cargar notificaciones al entrar
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
   const fetchNotifications = async () => {
     try {
       const res = await axios.get('/notifications');
       setNotifications(res.data);
     } catch (error) {
-      console.error("Error al cargar notificaciones", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  // --- FUNCIÓN PARA MARCAR COMO LEÍDA ---
+  const handleMarkAsRead = async (id, isAlreadyRead) => {
+    if (isAlreadyRead) return; // Si ya está leída, no hacemos nada
 
-  // Marcar una como leída
-  const handleMarkRead = async (id) => {
     try {
+      // 1. Actualización Optimista (Frontend inmediato)
+      const updatedList = notifications.map(n => 
+        n._id === id ? { ...n, read: true } : n
+      );
+      setNotifications(updatedList);
+
+      // 2. Actualización en Base de Datos (Backend)
       await axios.put(`/notifications/${id}/read`);
-      // Actualizar localmente
-      setNotifications(notifications.map(n => n._id === id ? { ...n, read: true } : n));
-      // Disparar evento para actualizar la campana del Header
-      window.dispatchEvent(new Event('notificationUpdate'));
-    } catch (error) { console.error(error); }
+      
+      // Opcional: Disparar evento para actualizar el contador de la campanita en el Navbar
+      // window.dispatchEvent(new Event('notificationRead')); 
+
+    } catch (error) {
+      console.error("Error al marcar como leída", error);
+    }
   };
 
-  // Marcar TODAS como leídas
-  const handleMarkAllRead = async () => {
-    try {
-      await axios.put('/notifications/read-all');
-      setNotifications(notifications.map(n => ({ ...n, read: true })));
-      window.dispatchEvent(new Event('notificationUpdate'));
-    } catch (error) { console.error(error); }
-  };
-
-  // Eliminar
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`/notifications/${id}`);
-      setNotifications(notifications.filter(n => n._id !== id));
-      window.dispatchEvent(new Event('notificationUpdate'));
-    } catch (error) { console.error(error); }
-  };
-
-  // Icono según tipo
   const getIcon = (type) => {
       switch(type) {
-          case 'success': return <CheckCircle2 className="text-green-400" />;
-          case 'error': return <Info className="text-red-400" />;
-          default: return <User className="text-blue-400" />;
+          case 'success': return <CheckCircle className="text-green-500" />;
+          case 'alert': return <AlertTriangle className="text-orange-500" />;
+          default: return <Info className="text-blue-500" />;
       }
   };
 
-  if (loading) return <div className="flex justify-center items-center h-96"><Loader2 className="animate-spin text-blue-500" size={40}/></div>;
+  if (loading) return <div className="p-8 text-center text-slate-400">Cargando avisos...</div>;
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500 pb-20">
       
-      <div className="flex justify-between items-center mb-8">
-        <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                <Bell className="text-blue-500"/> Notificaciones
-            </h1>
-            <p className="text-slate-400 text-sm">Mantente al día con tus candidatos y procesos.</p>
+      <div className="mb-8 flex items-center gap-3">
+        <div className="p-3 bg-brand-primary/20 rounded-xl text-brand-primary">
+            <Bell size={28} />
         </div>
-        {notifications.some(n => !n.read) && (
-            <button 
-                onClick={handleMarkAllRead}
-                className="text-sm text-blue-400 hover:text-white flex items-center gap-2 transition-colors"
-            >
-                <Check size={16} /> Marcar todo como leído
-            </button>
-        )}
+        <div>
+            <h1 className="text-3xl font-bold text-white">Notificaciones</h1>
+            <p className="text-slate-400">Mantente al día con tus procesos.</p>
+        </div>
       </div>
 
       <div className="space-y-4">
         {notifications.length === 0 ? (
-            <div className="text-center py-20 bg-slate-900 border border-white/5 rounded-2xl">
-                <Bell size={48} className="mx-auto text-slate-700 mb-4"/>
+            <div className="text-center py-12 bg-brand-surface/30 rounded-2xl border border-white/5">
                 <p className="text-slate-500">No tienes notificaciones nuevas.</p>
             </div>
         ) : (
             notifications.map((notif) => (
                 <div 
-                    key={notif._id} 
-                    className={`p-5 rounded-xl border transition-all flex gap-4 items-start group ${
-                        notif.read 
-                        ? 'bg-slate-900/50 border-white/5 opacity-70' 
-                        : 'bg-slate-800 border-blue-500/30 shadow-lg shadow-blue-900/10'
-                    }`}
+                    key={notif._id}
+                    onClick={() => handleMarkAsRead(notif._id, notif.read)}
+                    className={`
+                        relative p-5 rounded-2xl border transition-all cursor-pointer group
+                        ${notif.read 
+                            ? 'bg-slate-900/50 border-white/5 opacity-70 hover:opacity-100' // Estilo LEÍDO (apagado)
+                            : 'bg-brand-surface border-brand-primary/30 shadow-lg shadow-brand-primary/10' // Estilo NO LEÍDO (resaltado)
+                        }
+                    `}
                 >
-                    {/* Icono */}
-                    <div className={`p-3 rounded-full flex-shrink-0 ${notif.read ? 'bg-slate-800' : 'bg-slate-900 border border-white/10'}`}>
-                        {getIcon(notif.type)}
-                    </div>
+                    {/* Indicador de "Nuevo" (Punto Azul) */}
+                    {!notif.read && (
+                        <span className="absolute top-4 right-4 flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-brand-primary"></span>
+                        </span>
+                    )}
 
-                    {/* Contenido */}
-                    <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                            <h4 className={`font-bold text-base ${notif.read ? 'text-slate-400' : 'text-white'}`}>
-                                {notif.title}
-                            </h4>
-                            <span className="text-xs text-slate-500 whitespace-nowrap ml-2">
-                                {new Date(notif.date).toLocaleDateString()}
-                            </span>
+                    <div className="flex gap-4">
+                        <div className={`mt-1 p-2 rounded-full h-fit ${notif.read ? 'bg-slate-800' : 'bg-white/10'}`}>
+                            {getIcon(notif.type)}
                         </div>
-                        <p className="text-sm text-slate-400 mt-1 leading-relaxed">
-                            {notif.message}
-                        </p>
-                    </div>
-
-                    {/* Acciones */}
-                    <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {!notif.read && (
-                            <button 
-                                onClick={() => handleMarkRead(notif._id)}
-                                title="Marcar como leída"
-                                className="p-2 bg-slate-700 hover:bg-blue-600 text-slate-300 hover:text-white rounded-lg transition-colors"
-                            >
-                                <Check size={14} />
-                            </button>
-                        )}
-                        <button 
-                            onClick={() => handleDelete(notif._id)}
-                            title="Eliminar"
-                            className="p-2 bg-slate-700 hover:bg-red-600 text-slate-300 hover:text-white rounded-lg transition-colors"
-                        >
-                            <Trash2 size={14} />
-                        </button>
+                        <div>
+                            <h3 className={`font-bold text-lg mb-1 ${notif.read ? 'text-slate-300' : 'text-white'}`}>
+                                {notif.title}
+                            </h3>
+                            <p className="text-slate-400 text-sm leading-relaxed mb-3">
+                                {notif.message}
+                            </p>
+                            <div className="flex items-center gap-4 text-xs text-slate-500">
+                                <span className="flex items-center gap-1">
+                                    <Clock size={12}/> {new Date(notif.created_at).toLocaleDateString()}
+                                </span>
+                                {notif.read && (
+                                    <span className="flex items-center gap-1 text-green-500/50">
+                                        <Check size={12}/> Visto
+                                    </span>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             ))

@@ -23,5 +23,5 @@ router.put('/read-all', auth, notificationController.markAllRead);
 // @desc    Delete a notification
 // @access  Private
 router.delete('/:id', auth, notificationController.deleteNotification);
-
+router.put('/:id/read', auth, notificationController.markAsRead);
 module.exports = router;

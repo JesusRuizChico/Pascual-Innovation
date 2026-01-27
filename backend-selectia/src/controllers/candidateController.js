@@ -1,6 +1,6 @@
 // backend-selectia/src/controllers/candidateController.js
 const Candidate = require('../models/Candidate');
-const User = require('../models/User'); // <--- IMPORTANTE: Importamos el modelo User
+const User = require('../models/User');
 
 // --- OBTENER MI PERFIL ---
 exports.getMyProfile = async (req, res) => {
@@ -21,43 +21,33 @@ exports.getMyProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
     try {
         const { 
-            title, 
-            phone, 
-            location, 
-            salary_expectations, 
-            skills, 
-            experience_years,
-            education_level 
+            title, phone, location, salary_expectations, 
+            skills, experience_years, education_level, 
+            experience, education // Asegúrate de recibir estos también si los envías
         } = req.body;
 
-        // 1. BUSCAR AL USUARIO EN LA BD PARA OBTENER SU NOMBRE REAL
         const userRecord = await User.findById(req.user.id);
-        
-        if (!userRecord) {
-            return res.status(404).json({ msg: 'Usuario no encontrado' });
-        }
+        if (!userRecord) return res.status(404).json({ msg: 'Usuario no encontrado' });
 
-        // 2. Armar el nombre completo real
         const realFullName = `${userRecord.name} ${userRecord.lastname}`;
 
-        // Armar objeto de perfil
         const profileFields = {
             user: req.user.id,
-            full_name: realFullName, // <--- AQUÍ USAMOS EL NOMBRE REAL
+            full_name: realFullName,
             title,
             phone,
             location,
             salary_expectations,
-            skills: Array.isArray(skills) ? skills : skills.split(',').map(s => s.trim()), 
+            skills: Array.isArray(skills) ? skills : (skills ? skills.split(',').map(s => s.trim()) : []), 
             experience_years,
-            education_level
+            education_level,
+            experience: experience || [], // Mantener arrays si vienen
+            education: education || []
         };
 
-        // Buscar si ya existe y actualizar, si no, crear (upsert)
         let profile = await Candidate.findOne({ user: req.user.id });
 
         if (profile) {
-            // Actualizar
             profile = await Candidate.findOneAndUpdate(
                 { user: req.user.id },
                 { $set: profileFields },
@@ -66,7 +56,6 @@ exports.updateProfile = async (req, res) => {
             return res.json(profile);
         }
 
-        // Crear
         profile = new Candidate(profileFields);
         await profile.save();
         res.json(profile);
@@ -77,23 +66,62 @@ exports.updateProfile = async (req, res) => {
     }
 };
 
-// ... (código anterior) ...
-
-// --- DESCARTAR UNA VACANTE ---
+// --- DESCARTAR VACANTE ---
 exports.discardVacancy = async (req, res) => {
     try {
         const { vacancyId } = req.params;
-        
-        // Usamos $addToSet para no agregar el mismo ID dos veces
         await Candidate.findOneAndUpdate(
             { user: req.user.id },
             { $addToSet: { rejected_vacancies: vacancyId } }
         );
-
         res.json({ msg: 'Vacante descartada exitosamente' });
-
     } catch (error) {
         console.error(error);
         res.status(500).send('Error al descartar vacante');
+    }
+};
+
+// --- NUEVO: SUBIR FOTO (Cloudinary) ---
+exports.uploadPhoto = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).send('No se subió ningún archivo');
+        }
+
+        // Con Cloudinary, req.file.path YA ES LA URL WEB (https://...)
+        const photoUrl = req.file.path;
+
+        const profile = await Candidate.findOneAndUpdate(
+            { user: req.user.id },
+            { $set: { photo_url: photoUrl } },
+            { new: true, upsert: true } // Upsert crea el perfil si no existe solo con la foto
+        );
+
+        res.json(profile);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error al subir la imagen');
+    }
+};
+
+// --- NUEVO: SUBIR CV PDF (Cloudinary) ---
+exports.uploadCV = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).send('No se subió ningún archivo');
+        }
+
+        const cvUrl = req.file.path; // URL del PDF en la nube
+
+        const profile = await Candidate.findOneAndUpdate(
+            { user: req.user.id },
+            { $set: { cv_url: cvUrl } },
+            { new: true, upsert: true }
+        );
+
+        res.json(profile);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error al subir el CV');
     }
 };

@@ -22,7 +22,7 @@ const LandingPage = () => {
     { title: "Ingeniería Industrial", count: "+930 vacantes", icon: <Building2 className="w-6 h-6" />, color: "text-orange-400", border: "hover:border-orange-500/50" },
   ];
 
-  // Logos de Empresas
+  // --- LOGOS DE EMPRESAS (Lista Ampliada) ---
   const companies = [
     { name: "Google", url: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" },
     { name: "Microsoft", url: "https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg" },
@@ -31,7 +31,13 @@ const LandingPage = () => {
     { name: "Oracle", url: "https://upload.wikimedia.org/wikipedia/commons/5/50/Oracle_logo.svg" },
     { name: "Samsung", url: "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg" },
     { name: "Spotify", url: "https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg" },
-    { name: "Tesla", url: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png" }
+    { name: "Tesla", url: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png" },
+    { name: "Intel", url: "https://upload.wikimedia.org/wikipedia/commons/c/c9/Intel-logo.svg" },
+    { name: "Meta", url: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg" },
+    { name: "Nvidia", url: "https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg" },
+    { name: "Adobe", url: "https://upload.wikimedia.org/wikipedia/commons/8/8d/Adobe_Corporate_Logo.png" },
+    { name: "Netflix", url: "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" },
+    { name: "Airbnb", url: "https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_Bélo.svg" }
   ];
 
   // --- LÓGICA DEL MODAL ---
@@ -146,13 +152,14 @@ const LandingPage = () => {
         </div>
       </div>
 
-      {/* --- CARRUSEL DE LOGOS --- */}
+      {/* --- CARRUSEL DE LOGOS (ACTUALIZADO CON MÁS EMPRESAS) --- */}
       <div className="w-full bg-brand-surface/50 border-y border-white/5 py-10 overflow-hidden">
         <p className="text-center text-slate-500 text-xs font-bold tracking-[0.2em] mb-10 uppercase">
             Confían en nuestro talento
         </p>
         <div className="relative flex overflow-x-hidden group">
           <div className="animate-scroll whitespace-nowrap flex gap-20 items-center pl-10">
+            {/* Renderizamos la lista dos veces para el efecto infinito */}
             {[...companies, ...companies].map((company, index) => (
               <img 
                 key={index} 
@@ -163,6 +170,7 @@ const LandingPage = () => {
               />
             ))}
           </div>
+          {/* Sombras laterales */}
           <div className="absolute top-0 left-0 h-full w-32 bg-gradient-to-r from-brand-dark to-transparent z-10"></div>
           <div className="absolute top-0 right-0 h-full w-32 bg-gradient-to-l from-brand-dark to-transparent z-10"></div>
         </div>
@@ -263,7 +271,6 @@ const LandingPage = () => {
                 </div>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-                {/* (Contenido de las pestañas igual que antes, solo visual) */}
                 {activeTab === 'candidato' ? (
                     <>
                         <div className="bg-brand-surface/50 p-6 rounded-xl border border-white/5">

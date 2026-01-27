@@ -1,12 +1,17 @@
+// backend-selectia/src/routes/recruiterRoutes.js
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const recruiterController = require('../controllers/recruiterController');
-const upload = require('../middleware/upload'); // Reutilizamos el mismo middleware de subida
+
+// --- CAMBIO: USAR UPLOADCLOUD EN VEZ DE UPLOAD LOCAL ---
+const uploadCloud = require('../middleware/uploadCloud'); 
 
 // Todas las rutas requieren login
 router.get('/me', auth, recruiterController.getMe);
 router.post('/', auth, recruiterController.updateProfile);
-router.post('/upload-logo', auth, upload.single('logo'), recruiterController.uploadLogo);
+
+// --- CAMBIO: Usar uploadCloud.single('logo') ---
+router.post('/upload-logo', auth, uploadCloud.single('logo'), recruiterController.uploadLogo);
 
 module.exports = router;
