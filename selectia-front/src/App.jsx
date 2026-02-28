@@ -2,6 +2,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
+import { ThemeProvider } from './context/ThemeContext'; // Ajusta la ruta
+
 // --- LAYOUTS ---
 import CandidateLayout from './layouts/CandidateLayout';
 import RecruiterLayout from './layouts/RecruiterLayout'; // Asegúrate de tener este archivo
@@ -34,10 +36,10 @@ import PostJobPage from './pages/recruiter/PostJobPage';
 
 // --- PAGES ADMIN ---
 import AdminDashboard from './pages/admin/AdminDashboard';
-// import ValidateCompaniesPage from './pages/admin/ValidateCompaniesPage';
-// import RevenuePage from './pages/admin/RevenuePage';
-// import UsersGlobalPage from './pages/admin/UsersGlobalPage';
-// import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
+import ValidateCompaniesPage from './pages/admin/ValidateCompaniesPage';
+import RevenuePage from './pages/admin/RevenuePage';
+import UsersGlobalPage from './pages/admin/UsersGlobalPage';
+import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
 
 // src/App.jsx
 import NotificationsPageRecruiter from './pages/recruiter/NotificationsPage'; // <--- IMPORTAR
@@ -49,60 +51,63 @@ import CompanySettingsPage from './pages/recruiter/CompanySettingsPage';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        
-        {/* === RUTAS PÚBLICAS === */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPassPage />} />
+    // ¡AQUÍ ESTÁ LA MAGIA! Envolvemos el Router con el ThemeProvider
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          
+          {/* === RUTAS PÚBLICAS === */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPassPage />} />
 
-        {/* === RUTAS CANDIDATO === */}
-        <Route path="/candidate" element={<CandidateLayout />}>
-           <Route index element={<Navigate to="dashboard" replace />} />
-           
-           {/* Si no tienes DashboardHome, usa SearchPage temporalmente */}
-           <Route path="dashboard" element={<DashboardHome />} /> 
-           
-           <Route path="cv" element={<CvPage />} />
-           <Route path="search" element={<SearchPage />} />
-           <Route path="notifications" element={<NotificationsPageCandidate />} />
-           
-           <Route path="profile" element={<ProfilePage />} />
-           <Route path="help" element={<HelpPage />} />
-        </Route>
+          {/* === RUTAS CANDIDATO === */}
+          <Route path="/candidate" element={<CandidateLayout />}>
+             <Route index element={<Navigate to="dashboard" replace />} />
+             
+             {/* Si no tienes DashboardHome, usa SearchPage temporalmente */}
+             <Route path="dashboard" element={<DashboardHome />} /> 
+             
+             <Route path="cv" element={<CvPage />} />
+             <Route path="search" element={<SearchPage />} />
+             <Route path="notifications" element={<NotificationsPageCandidate />} />
+             
+             <Route path="profile" element={<ProfilePage />} />
+             <Route path="help" element={<HelpPage />} />
+          </Route>
 
-        {/* === RUTAS RECLUTADOR === */}
-        <Route path="/recruiter" element={<RecruiterLayout />}>
-           <Route index element={<Navigate to="dashboard" replace />} />
-           <Route path="dashboard" element={<RecruiterDashboard />} />
-           <Route path="vacancies" element={<MyVacancies />} />
-           <Route path="candidates" element={<CandidatesPage />} />
-           <Route path="post-job" element={<PostJobPage />} />
-           <Route path="help" element={<RecruiterHelpPage />} />
-          <Route path="settings" element={<CompanySettingsPage />} />
-           {/* <Route path="billing" element={<BillingPage />} /> */}
-           {/* <Route path="users" element={<UserManagementPage />} /> */}
-           <Route path="notifications" element={<NotificationsPageRecruiter />} />
-        </Route>
+          {/* === RUTAS RECLUTADOR === */}
+          <Route path="/recruiter" element={<RecruiterLayout />}>
+             <Route index element={<Navigate to="dashboard" replace />} />
+             <Route path="dashboard" element={<RecruiterDashboard />} />
+             <Route path="vacancies" element={<MyVacancies />} />
+             <Route path="candidates" element={<CandidatesPage />} />
+             <Route path="post-job" element={<PostJobPage />} />
+             <Route path="help" element={<RecruiterHelpPage />} />
+            <Route path="settings" element={<CompanySettingsPage />} />
+             {/* <Route path="billing" element={<BillingPage />} /> */}
+             {/* <Route path="users" element={<UserManagementPage />} /> */}
+             <Route path="notifications" element={<NotificationsPageRecruiter />} />
+          </Route>
 
-        {/* === RUTAS ADMIN === */}
-        <Route path="/admin" element={<AdminLayout />}>
-           <Route index element={<Navigate to="dashboard" replace />} />
-           <Route path="dashboard" element={<AdminDashboard />} />
-           
-           {/* <Route path="validate" element={<ValidateCompaniesPage />} /> */}
-           {/* <Route path="revenue" element={<RevenuePage />} /> */}
-           {/* <Route path="users" element={<UsersGlobalPage />} /> */}
-           {/* <Route path="notifications" element={<AdminNotificationsPage />} /> */}
-        </Route>
+          {/* === RUTAS ADMIN === */}
+          <Route path="/admin" element={<AdminLayout />}>
+             <Route index element={<Navigate to="dashboard" replace />} />
+             <Route path="dashboard" element={<AdminDashboard />} />
+             
+             <Route path="validate" element={<ValidateCompaniesPage />} />
+             <Route path="revenue" element={<RevenuePage />} />
+             <Route path="users" element={<UsersGlobalPage />} />
+             <Route path="notifications" element={<AdminNotificationsPage />} />
+          </Route>
 
-        {/* === 404 NOT FOUND === */}
-        <Route path="*" element={<NotFoundPage />} />
+          {/* === 404 NOT FOUND === */}
+          <Route path="*" element={<NotFoundPage />} />
 
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

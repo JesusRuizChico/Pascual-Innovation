@@ -19,9 +19,15 @@ const AdminLayout = () => {
 
   const navLinks = [
     { name: 'Vista General', path: '/admin/dashboard', icon: <LayoutGrid size={18} /> },
-    { name: 'Validar Empresas', path: '/admin/validate', icon: <ShieldCheck size={18} /> },
-    { name: 'Ingresos', path: '/admin/revenue', icon: <CreditCard size={18} /> },
-    { name: 'Usuarios', path: '/admin/users', icon: <Users size={18} /> },
+    
+    // CORREGIDO: Cambiado de /admin/ValidateCompaniesPage a /admin/validate
+    { name: 'Validar Empresas', path: '/admin/validate', icon: <ShieldCheck size={18} /> }, 
+    
+    // CORREGIDO: Cambiado de /admin/RevenuePage a /admin/revenue
+    { name: 'Ingresos', path: '/admin/revenue', icon: <CreditCard size={18} /> }, 
+    
+    // CORREGIDO: Cambiado de /admin/UsersGlobalPage a /admin/users
+    { name: 'Usuarios', path: '/admin/users', icon: <Users size={18} /> }, 
   ];
 
   return (

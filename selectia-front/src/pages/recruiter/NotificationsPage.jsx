@@ -46,30 +46,32 @@ const NotificationsPage = () => {
 
   const getIcon = (type) => {
       switch(type) {
-          case 'success': return <CheckCircle className="text-green-500" />;
-          case 'alert': return <AlertTriangle className="text-orange-500" />;
-          default: return <Info className="text-blue-500" />;
+          case 'success': return <CheckCircle className="text-green-600 dark:text-green-500 transition-colors" />;
+          case 'alert': return <AlertTriangle className="text-orange-600 dark:text-orange-500 transition-colors" />;
+          default: return <Info className="text-blue-600 dark:text-blue-500 transition-colors" />;
       }
   };
 
-  if (loading) return <div className="p-8 text-center text-slate-400">Cargando avisos...</div>;
+  if (loading) return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Cargando avisos...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500 pb-20">
+    <div className="max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500 pb-20 transition-colors">
       
+      {/* HEADER */}
       <div className="mb-8 flex items-center gap-3">
-        <div className="p-3 bg-brand-primary/20 rounded-xl text-brand-primary">
+        <div className="p-3 bg-brand-primary/10 dark:bg-brand-primary/20 rounded-xl text-brand-primary transition-colors">
             <Bell size={28} />
         </div>
         <div>
-            <h1 className="text-3xl font-bold text-white">Notificaciones</h1>
-            <p className="text-slate-400">Mantente al día con tus procesos.</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white transition-colors">Notificaciones</h1>
+            <p className="text-slate-600 dark:text-slate-400 transition-colors">Mantente al día con tus procesos.</p>
         </div>
       </div>
 
+      {/* LISTA */}
       <div className="space-y-4">
         {notifications.length === 0 ? (
-            <div className="text-center py-12 bg-brand-surface/30 rounded-2xl border border-white/5">
+            <div className="text-center py-12 bg-white dark:bg-brand-surface/30 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none transition-colors">
                 <p className="text-slate-500">No tienes notificaciones nuevas.</p>
             </div>
         ) : (
@@ -80,12 +82,12 @@ const NotificationsPage = () => {
                     className={`
                         relative p-5 rounded-2xl border transition-all cursor-pointer group
                         ${notif.read 
-                            ? 'bg-slate-900/50 border-white/5 opacity-70 hover:opacity-100' // Estilo LEÍDO (apagado)
-                            : 'bg-brand-surface border-brand-primary/30 shadow-lg shadow-brand-primary/10' // Estilo NO LEÍDO (resaltado)
+                            ? 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-white/5 opacity-70 hover:opacity-100' // Estilo LEÍDO
+                            : 'bg-white dark:bg-brand-surface border-brand-primary/30 shadow-md dark:shadow-lg dark:shadow-brand-primary/10' // Estilo NO LEÍDO
                         }
                     `}
                 >
-                    {/* Indicador de "Nuevo" (Punto Azul) */}
+                    {/* Indicador de "Nuevo" (Punto Morado) */}
                     {!notif.read && (
                         <span className="absolute top-4 right-4 flex h-3 w-3">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75"></span>
@@ -94,22 +96,22 @@ const NotificationsPage = () => {
                     )}
 
                     <div className="flex gap-4">
-                        <div className={`mt-1 p-2 rounded-full h-fit ${notif.read ? 'bg-slate-800' : 'bg-white/10'}`}>
+                        <div className={`mt-1 p-2 rounded-full h-fit transition-colors ${notif.read ? 'bg-slate-200 dark:bg-slate-800' : 'bg-slate-100 dark:bg-white/10'}`}>
                             {getIcon(notif.type)}
                         </div>
                         <div>
-                            <h3 className={`font-bold text-lg mb-1 ${notif.read ? 'text-slate-300' : 'text-white'}`}>
+                            <h3 className={`font-bold text-lg mb-1 transition-colors ${notif.read ? 'text-slate-700 dark:text-slate-300' : 'text-slate-900 dark:text-white'}`}>
                                 {notif.title}
                             </h3>
-                            <p className="text-slate-400 text-sm leading-relaxed mb-3">
+                            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-3 transition-colors">
                                 {notif.message}
                             </p>
                             <div className="flex items-center gap-4 text-xs text-slate-500">
-                                <span className="flex items-center gap-1">
+                                <span className="flex items-center gap-1 transition-colors">
                                     <Clock size={12}/> {new Date(notif.created_at).toLocaleDateString()}
                                 </span>
                                 {notif.read && (
-                                    <span className="flex items-center gap-1 text-green-500/50">
+                                    <span className="flex items-center gap-1 text-green-600/70 dark:text-green-500/50 transition-colors">
                                         <Check size={12}/> Visto
                                     </span>
                                 )}

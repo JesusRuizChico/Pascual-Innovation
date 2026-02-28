@@ -29,7 +29,7 @@ app.use('/api/candidates', require('./routes/candidateRoutes'));
 app.use('/api/applications', require('./routes/applicationRoutes'));
 app.use('/api/stats', require('./routes/statsRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
-
+app.use('/api/chat', require('./routes/chatRoutes'));
 // ...
 app.use('/api/stats', require('./routes/statsRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));

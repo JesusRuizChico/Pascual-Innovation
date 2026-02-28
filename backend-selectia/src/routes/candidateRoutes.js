@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const candidateController = require('../controllers/candidateController');
-
+const upload = require('../middleware/upload');
 // --- IMPORTAR EL MIDDLEWARE DE CLOUDINARY ---
 const uploadCloud = require('../middleware/uploadCloud'); 
 
@@ -18,7 +18,7 @@ router.post('/', auth, candidateController.updateProfile);
 router.post('/upload-photo', auth, uploadCloud.single('photo'), candidateController.uploadPhoto);
 
 // Usamos uploadCloud.single('cv') para subir el PDF a la nube
-router.post('/upload-cv', auth, uploadCloud.single('cv'), candidateController.uploadCV);
+router.post('/upload-cv', auth, upload.single('cv'), candidateController.uploadCV);
 
 // Descartar Vacante
 router.put('/discard/:vacancyId', auth, candidateController.discardVacancy);
