@@ -21,6 +21,16 @@ router.post('/change-password', auth, authController.changePassword);
 
 
 router.delete('/me', auth, authController.deleteAccount); // <--- NUEVA RUTA
+// ... tus rutas existentes (register, login, change-password, me) ...
 
+// @route   POST api/auth/forgot-password
+// @desc    Enviar correo de recuperación
+// @access  Public
+router.post('/forgot-password', authController.forgotPassword);
+
+// @route   POST api/auth/reset-password/:token
+// @desc    Restablecer la contraseña con el token
+// @access  Public
+router.post('/reset-password/:token', authController.resetPassword);
 
 module.exports = router;

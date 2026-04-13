@@ -3,6 +3,7 @@ const express = require('express');
 const connectDB = require('./config/db');
 const cors = require('cors');
 const path = require('path'); // <--- 1. IMPORTANTE: Agrega esto arriba
+const adminRoutes = require('./routes/adminRoutes');
 
 require('dotenv').config();
 
@@ -37,7 +38,7 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 // NUEVA RUTA
 app.use('/api/recruiters', require('./routes/recruiterRoutes')); 
 // ...
-
+app.use('/api/admin', adminRoutes);
 
 const PORT = process.env.PORT || 4000;
 

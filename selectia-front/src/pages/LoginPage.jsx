@@ -1,9 +1,9 @@
 // src/pages/auth/LoginPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, LogIn, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
-import axios from '../api/axios'; // <--- OJO: Ajusta la ruta si es necesario
-import ThemeToggle from '../components/ThemeToggle'; // <--- IMPORTADO
+import { Mail, Lock, LogIn, Loader2, AlertCircle, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import axios from '../api/axios';
+import ThemeToggle from '../components/ThemeToggle';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -11,6 +11,9 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({}); 
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+  
+  // Estado para mostrar/ocultar contraseña
+  const [showPassword, setShowPassword] = useState(false);
 
   // Validación de Formulario
   const validate = () => {
@@ -71,12 +74,10 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-brand-dark flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300">
       
-      {/* Botón flotante para cambiar tema */}
       <div className="absolute top-6 right-6 z-50">
           <ThemeToggle />
       </div>
 
-      {/* Fondo decorativo */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-brand-primary/5 dark:from-brand-primary/10 to-transparent dark:to-brand-dark z-0 transition-colors"></div>
       <div className="absolute -top-20 -right-20 w-96 h-96 bg-brand-primary/10 dark:bg-blue-600/20 rounded-full blur-[80px] dark:blur-[100px] transition-colors"></div>
 
@@ -99,7 +100,6 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           
-          {/* Email */}
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 transition-colors">Correo Electrónico</label>
             <div className="relative">
@@ -116,24 +116,30 @@ const LoginPage = () => {
             {errors.email && <p className="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 transition-colors">{errors.email}</p>}
           </div>
 
-          {/* Password */}
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 transition-colors">Contraseña</label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 text-slate-400 dark:text-slate-500 transition-colors" size={18} />
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 name="password"
                 placeholder="••••••••"
-                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-xl py-2.5 pl-10 pr-4 text-slate-900 dark:text-white focus:outline-none transition-colors placeholder:text-slate-400 dark:placeholder:text-slate-500 ${errors.password ? 'border-red-500' : 'border-slate-300 dark:border-white/10 focus:border-brand-primary dark:focus:border-brand-primary'}`}
+                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-xl py-2.5 pl-10 pr-10 text-slate-900 dark:text-white focus:outline-none transition-colors placeholder:text-slate-400 dark:placeholder:text-slate-500 ${errors.password ? 'border-red-500' : 'border-slate-300 dark:border-white/10 focus:border-brand-primary dark:focus:border-brand-primary'}`}
                 value={formData.password}
                 onChange={handleChange}
               />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
             {errors.password && <p className="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 transition-colors">{errors.password}</p>}
             
             <div className="text-right mt-2">
-                <a href="#" className="text-xs text-brand-primary hover:text-brand-accent dark:hover:text-white transition-colors">¿Olvidaste tu contraseña?</a>
+                <Link to="/forgot-password" className="text-xs text-brand-primary hover:text-brand-accent dark:hover:text-white transition-colors">¿Olvidaste tu contraseña?</Link>
             </div>
           </div>
 

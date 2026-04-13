@@ -1,90 +1,95 @@
 // src/pages/admin/RevenuePage.jsx
 import React from 'react';
-import { DollarSign, TrendingUp, Download, CreditCard } from 'lucide-react';
+import { DollarSign, TrendingUp, Download, CreditCard, Activity } from 'lucide-react';
 
 const RevenuePage = () => {
-  
-  // Datos para la gráfica (simulada con CSS)
-  const chartData = [40, 65, 45, 80, 55, 90, 100]; // Porcentajes de altura
+  const chartData = [40, 65, 45, 80, 55, 90, 100]; 
   const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
       
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-white">Reporte de Ingresos</h1>
-        <button className="flex items-center gap-2 bg-slate-800 text-slate-300 px-4 py-2 rounded-lg hover:bg-slate-700 hover:text-white transition-colors border border-white/10">
-            <Download size={18} /> Exportar CSV
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white transition-colors">Finanzas y Suscripciones</h1>
+            <p className="text-slate-600 dark:text-slate-400 text-sm transition-colors">Monitoreo de ingresos de empresas reclutadoras.</p>
+        </div>
+        <button className="flex items-center gap-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-white px-4 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none text-sm font-medium">
+            <Download size={16} /> Exportar CSV
         </button>
       </div>
 
-      {/* --- TARJETAS SUPERIORES --- */}
+      {/* --- TARJETAS --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-green-900/40 to-slate-900 border border-green-500/30 p-6 rounded-2xl">
-            <p className="text-green-400 text-sm font-bold mb-2 uppercase tracking-wider">Ingresos Totales (Mes)</p>
-            <h2 className="text-4xl font-bold text-white mb-2">$124,500.00</h2>
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-                <span className="bg-green-500/20 text-green-400 px-1.5 rounded text-xs font-bold">+12%</span> vs mes anterior
+        <div className="bg-white dark:bg-gradient-to-br dark:from-green-900/20 dark:to-slate-900 border border-slate-200 dark:border-green-500/20 p-6 rounded-2xl shadow-sm dark:shadow-none transition-colors">
+            <div className="flex items-center justify-between mb-2">
+                <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider transition-colors">Ingresos Mes Actual</p>
+                <DollarSign size={16} className="text-green-500" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 transition-colors">$124,500.00</h2>
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 transition-colors">
+                <span className="bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded transition-colors">+12%</span> vs mes anterior
             </div>
         </div>
-        <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl">
-            <p className="text-slate-400 text-sm font-bold mb-2 uppercase tracking-wider">Suscripciones Activas</p>
-            <h2 className="text-4xl font-bold text-white mb-2">85</h2>
-            <p className="text-sm text-slate-500">Empresas en Plan Premium</p>
+        
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl shadow-sm dark:shadow-none transition-colors">
+            <div className="flex items-center justify-between mb-2">
+                <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider transition-colors">Suscripciones Activas</p>
+                <Activity size={16} className="text-blue-500" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 transition-colors">85</h2>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 transition-colors">Empresas en Plan Premium</p>
         </div>
-        <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl">
-            <p className="text-slate-400 text-sm font-bold mb-2 uppercase tracking-wider">Pago Promedio (ARPU)</p>
-            <h2 className="text-4xl font-bold text-white mb-2">$1,450</h2>
-            <p className="text-sm text-slate-500">Por empresa activa</p>
+
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl shadow-sm dark:shadow-none transition-colors">
+            <div className="flex items-center justify-between mb-2">
+                <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider transition-colors">Pago Promedio (ARPU)</p>
+                <TrendingUp size={16} className="text-purple-500" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 transition-colors">$1,464.00</h2>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 transition-colors">Por empresa activa</p>
         </div>
       </div>
 
-      {/* --- GRÁFICA Y TRANSACCIONES --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Gráfica Simple CSS */}
-        <div className="lg:col-span-2 bg-slate-900 border border-white/10 p-6 rounded-2xl">
-            <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold text-white flex items-center gap-2">
-                    <TrendingUp className="text-orange-500" size={20}/> Tendencia Semanal
-                </h3>
-            </div>
+        {/* Gráfica Simple */}
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl shadow-sm dark:shadow-none transition-colors">
+            <h3 className="font-bold text-slate-900 dark:text-white mb-6 transition-colors">Ingresos Semanales</h3>
             
-            {/* Contenedor Gráfica */}
-            <div className="h-64 flex items-end justify-between gap-4 px-4">
+            <div className="h-64 flex items-end justify-between gap-2 sm:gap-4 px-2 sm:px-4">
                 {chartData.map((height, index) => (
-                    <div key={index} className="w-full flex flex-col items-center gap-2 group">
+                    <div key={index} className="w-full flex flex-col items-center gap-3 group">
                         <div 
-                            className="w-full bg-orange-600/20 border-t-4 border-orange-500 rounded-t-sm transition-all duration-500 group-hover:bg-orange-600/40 relative"
+                            className="w-full max-w-[40px] bg-blue-100 dark:bg-blue-900/30 border-t-4 border-blue-500 rounded-t transition-all duration-500 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/50 relative"
                             style={{ height: `${height}%` }}
                         >
-                            {/* Tooltip */}
-                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-slate-900 text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                 ${height * 150}
                             </div>
                         </div>
-                        <span className="text-xs text-slate-500">{days[index]}</span>
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 transition-colors">{days[index]}</span>
                     </div>
                 ))}
             </div>
         </div>
 
         {/* Últimas Transacciones */}
-        <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl overflow-y-auto max-h-[400px] custom-scrollbar">
-            <h3 className="font-bold text-white mb-4">Recientes</h3>
-            <div className="space-y-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl shadow-sm dark:shadow-none transition-colors">
+            <h3 className="font-bold text-slate-900 dark:text-white mb-4 transition-colors">Pagos Recientes</h3>
+            <div className="space-y-3">
                 {[1, 2, 3, 4, 5].map((item) => (
-                    <div key={item} className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-white/5 hover:border-white/10 transition-colors">
+                    <div key={item} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-white/5 transition-colors">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-slate-800 rounded-full text-green-400">
+                            <div className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg text-green-600 dark:text-green-400 shadow-sm transition-colors">
                                 <CreditCard size={16} />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-white">Innovation Pascual</p>
-                                <p className="text-xs text-slate-500">Plan Premium</p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white transition-colors">Empresa #{item}23</p>
+                                <p className="text-[10px] text-slate-500 font-medium transition-colors">Plan Mensual</p>
                             </div>
                         </div>
-                        <span className="font-mono text-green-400 font-bold text-sm">+$2,500</span>
+                        <span className="font-mono text-slate-900 dark:text-white font-bold text-sm transition-colors">+$990</span>
                     </div>
                 ))}
             </div>

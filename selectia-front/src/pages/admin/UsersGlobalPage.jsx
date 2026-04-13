@@ -1,39 +1,39 @@
-// src/pages/admin/UsersGlobalPage.jsx
-import React, { useState } from 'react';
-import { 
-  Search, 
-  MoreHorizontal, 
-  User, 
-  Briefcase, 
-  ShieldAlert, 
-  Trash2, 
-  Lock 
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, User, Briefcase, ShieldAlert, Trash2, Lock, Loader2 } from 'lucide-react';
+import axios from '../../api/axios';
 
 const UsersGlobalPage = () => {
-  const [filter, setFilter] = useState('all'); // all, candidate, recruiter
+  const [filter, setFilter] = useState('all');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock Data
-  const users = [
-    { id: 1, name: "Juan Pérez", email: "juan@gmail.com", role: "candidate", status: "active" },
-    { id: 2, name: "Maria Lopez", email: "maria@empresa.com", role: "recruiter", status: "active" },
-    { id: 3, name: "Pedro Hacker", email: "hack@spam.com", role: "candidate", status: "banned" },
-    { id: 4, name: "Innovation Pascual", email: "admin@pascual.com", role: "recruiter", status: "active" },
-  ];
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get('/admin/users');
+        setUsers(res.data);
+      } catch (error) {
+        console.error("Error cargando usuarios", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const filteredUsers = filter === 'all' ? users : users.filter(u => u.role === filter);
 
+  if (loading) return <div className="flex justify-center items-center h-96"><Loader2 className="animate-spin text-blue-500" size={40}/></div>;
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
-      
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Gestión de Usuarios</h1>
-        <div className="flex bg-slate-900 p-1 rounded-lg border border-white/10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Directorio de Usuarios</h1>
+        <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-white/10">
             {['all', 'candidate', 'recruiter'].map((type) => (
                 <button 
-                    key={type}
-                    onClick={() => setFilter(type)}
-                    className={`px-4 py-1.5 rounded-md text-sm font-medium capitalize transition-all ${filter === type ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                    key={type} onClick={() => setFilter(type)}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold capitalize ${filter === type ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500'}`}
                 >
                     {type === 'all' ? 'Todos' : type === 'candidate' ? 'Candidatos' : 'Reclutadores'}
                 </button>
@@ -41,71 +41,40 @@ const UsersGlobalPage = () => {
         </div>
       </div>
 
-      <div className="bg-slate-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
-        {/* Buscador interno */}
-        <div className="p-4 border-b border-white/10 bg-slate-950/50">
-            <div className="relative max-w-md">
-                <Search className="absolute left-3 top-2.5 text-slate-500 w-4 h-4" />
-                <input 
-                    type="text" 
-                    placeholder="Buscar por nombre o correo..." 
-                    className="bg-slate-900 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white w-full focus:outline-none focus:border-orange-500" 
-                />
-            </div>
-        </div>
-
-        <table className="w-full text-left text-sm">
-            <thead className="bg-slate-950 text-slate-400 uppercase text-xs">
-                <tr>
-                    <th className="px-6 py-4">Usuario</th>
-                    <th className="px-6 py-4">Rol</th>
-                    <th className="px-6 py-4">Estado</th>
-                    <th className="px-6 py-4 text-right">Acciones</th>
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5 text-slate-300">
-                {filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-white/5 transition-colors">
-                        <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${user.role === 'candidate' ? 'bg-purple-600' : 'bg-blue-600'}`}>
-                                    {user.name.charAt(0)}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 dark:bg-slate-950/50 text-slate-500 text-xs uppercase">
+                    <tr><th className="px-6 py-4">Usuario</th><th className="px-6 py-4">Rol</th><th className="px-6 py-4">Registro</th></tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-300">
+                    {filteredUsers.length > 0 ? filteredUsers.map((user) => (
+                        <tr key={user._id} className="hover:bg-slate-50 dark:hover:bg-white/5">
+                            <td className="px-6 py-4">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm ${user.role === 'candidate' ? 'bg-blue-600' : 'bg-purple-600'}`}>
+                                        {(user.name || user.companyName || 'U').charAt(0)}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 dark:text-white">{user.name || user.companyName}</p>
+                                        <p className="text-xs text-slate-500">{user.email}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="font-bold text-white">{user.name}</p>
-                                    <p className="text-xs text-slate-500">{user.email}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td className="px-6 py-4">
-                            <span className={`flex items-center gap-1 w-fit px-2 py-1 rounded text-xs font-bold border ${user.role === 'candidate' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
-                                {user.role === 'candidate' ? <User size={12}/> : <Briefcase size={12}/>}
-                                {user.role === 'candidate' ? 'Candidato' : 'Reclutador'}
-                            </span>
-                        </td>
-                        <td className="px-6 py-4">
-                            {user.status === 'active' ? (
-                                <span className="text-green-400 text-xs font-bold flex items-center gap-1">● Activo</span>
-                            ) : (
-                                <span className="text-red-400 text-xs font-bold flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded border border-red-500/20">
-                                    <ShieldAlert size={12}/> Baneado
+                            </td>
+                            <td className="px-6 py-4">
+                                <span className={`flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-md text-xs font-bold ${user.role === 'candidate' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>
+                                    {user.role === 'candidate' ? <User size={14}/> : <Briefcase size={14}/>}
+                                    {user.role === 'candidate' ? 'Candidato' : 'Reclutador'}
                                 </span>
-                            )}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-2">
-                                <button className="p-2 hover:bg-white/10 rounded text-slate-400 hover:text-orange-400" title="Bloquear Acceso">
-                                    <Lock size={16} />
-                                </button>
-                                <button className="p-2 hover:bg-white/10 rounded text-slate-400 hover:text-red-400" title="Eliminar Definitivamente">
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
+                            </td>
+                            <td className="px-6 py-4 text-xs text-slate-500">{new Date(user.createdAt || Date.now()).toLocaleDateString()}</td>
+                        </tr>
+                    )) : (
+                        <tr><td colSpan="3" className="px-6 py-8 text-center text-slate-500">No se encontraron usuarios en la base de datos.</td></tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
       </div>
     </div>
   );

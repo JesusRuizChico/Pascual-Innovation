@@ -1,9 +1,9 @@
 // src/pages/RegisterPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Brain, Mail, Lock, User, Building2, ArrowLeft, Briefcase, FileText, Loader2, CheckCircle2 } from 'lucide-react';
+import { Brain, Mail, Lock, User, Building2, ArrowLeft, Briefcase, FileText, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import axios from '../api/axios';
-import ThemeToggle from '../components/ThemeToggle'; // <--- IMPORTADO
+import ThemeToggle from '../components/ThemeToggle';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -11,6 +11,7 @@ const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -65,7 +66,8 @@ const RegisterPage = () => {
 
     try {
       const dataToSend = {
-        name: `${formData.name} ${formData.lastname}`,
+        name: formData.name,
+        lastname: formData.lastname,
         email: formData.email,
         password: formData.password,
         role: role,
@@ -95,7 +97,6 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-brand-dark flex items-center justify-center relative overflow-hidden p-4 transition-colors duration-300">
       
-      {/* Botón flotante para cambiar tema */}
       <div className="absolute top-6 right-6 z-50">
           <ThemeToggle />
       </div>
@@ -179,7 +180,7 @@ const RegisterPage = () => {
                         <input 
                             type="text" name="companyName" 
                             value={formData.companyName} onChange={handleChange}
-                            placeholder="Innovation Pascual S.A." 
+                            placeholder="Innovaciones Pascual S.A." 
                             className={`w-full bg-slate-50 dark:bg-brand-dark/50 border rounded-xl px-10 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-brand-secondary dark:focus:border-brand-secondary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 ${errors.companyName ? 'border-red-500' : 'border-slate-300 dark:border-brand-secondary/30'}`}
                         />
                     </div>
@@ -220,11 +221,19 @@ const RegisterPage = () => {
             <div className="relative group">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-400 w-5 h-5 transition-colors" />
               <input 
-                type="password" name="password" 
+                type={showPassword ? "text" : "password"} 
+                name="password" 
                 value={formData.password} onChange={handleChange}
                 placeholder="••••••••" 
-                className={`w-full bg-slate-50 dark:bg-brand-dark/50 border rounded-xl px-10 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary dark:focus:border-brand-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 ${errors.password ? 'border-red-500' : 'border-slate-300 dark:border-white/10'}`}
+                className={`w-full bg-slate-50 dark:bg-brand-dark/50 border rounded-xl py-3 pl-10 pr-10 text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary dark:focus:border-brand-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 ${errors.password ? 'border-red-500' : 'border-slate-300 dark:border-white/10'}`}
               />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
             {errors.password && <p className="text-red-500 dark:text-red-400 text-xs ml-1 transition-colors">{errors.password}</p>}
           </div>

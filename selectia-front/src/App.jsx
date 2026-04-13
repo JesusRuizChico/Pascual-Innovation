@@ -14,6 +14,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPassPage from './pages/ForgotPassPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // --- PAGES CANDIDATO ---
@@ -37,7 +38,7 @@ import PostJobPage from './pages/recruiter/PostJobPage';
 // --- PAGES ADMIN ---
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ValidateCompaniesPage from './pages/admin/ValidateCompaniesPage';
-import RevenuePage from './pages/admin/RevenuePage';
+import PlatformReportsPage from './pages/admin/PlatformReportsPage';
 import UsersGlobalPage from './pages/admin/UsersGlobalPage';
 import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
 
@@ -61,6 +62,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPassPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
           {/* === RUTAS CANDIDATO === */}
           <Route path="/candidate" element={<CandidateLayout />}>
@@ -97,7 +99,7 @@ function App() {
              <Route path="dashboard" element={<AdminDashboard />} />
              
              <Route path="validate" element={<ValidateCompaniesPage />} />
-             <Route path="revenue" element={<RevenuePage />} />
+             <Route path="reports" element={<PlatformReportsPage />} />
              <Route path="users" element={<UsersGlobalPage />} />
              <Route path="notifications" element={<AdminNotificationsPage />} />
           </Route>

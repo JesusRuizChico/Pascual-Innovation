@@ -41,6 +41,18 @@ const userSchema = new mongoose.Schema({
     created_at: {
         type: Date,
         default: Date.now
+    },
+    // Añade esto dentro de tu schema en User.js
+    resetPasswordToken: {
+        type: String
+    },
+    resetPasswordExpire: {
+        type: Date
+    },
+    status: {
+    type: String,
+    enum: ['active', 'pending', 'banned'],
+    default: 'pending' // <--- Cambia esto para que los nuevos reclutadores nazcan como 'pending' si quieres validarlos manualmente
     }
 });
 
