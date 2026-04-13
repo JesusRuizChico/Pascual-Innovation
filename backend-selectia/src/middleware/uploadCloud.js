@@ -12,19 +12,19 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: async (req, file) => {
-        // Limpiamos el nombre de caracteres raros
+        // Limpiamos el nombre de caracteres raros (esto está perfecto, lo conservamos)
         const cleanName = file.originalname
             .split('.')[0]
             .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
             .replace(/[^a-zA-Z0-9]/g, "_");
 
         return {
-            folder: 'selectia_uploads',
-            // OBLIGATORIO: Guardar como 'raw' para que el PDF no se rompa
-            resource_type: 'raw', 
-            // OBLIGATORIO: Poner .pdf manualmente al final del nombre
-            public_id: `${cleanName}-${Date.now()}.pdf`,
-            format: undefined
+            folder: 'selectia_uploads', // Se guardará en la misma carpeta de tu Cloudinary
+            
+            // --- CORRECCIONES PARA IMÁGENES ---
+            allowed_formats: ['jpg', 'jpeg', 'png', 'webp'], // Solo permite imágenes
+            resource_type: 'image', // Le dice a Cloudinary que es una imagen, no un archivo crudo
+            public_id: `${cleanName}-${Date.now()}` // Quitamos el .pdf (Cloudinary le pondrá la extensión correcta automáticamente)
         };
     },
 });
