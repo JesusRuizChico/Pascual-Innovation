@@ -101,74 +101,118 @@ exports.uploadPhoto = async (req, res) => {
     }
 };
 
-// --- MODIFICADO: SUBIR CV Y SOBRESCRIBIR PERFIL CON IA (A PRUEBA DE FALLOS) ---
+// --- MODIFICADO: SUBIR CV Y SOBRESCRIBIR PERFIL CON IA (A PRUEBA DE FALLOS Y ARRAYS) ---
+// --- MODIFICADO: SUBIR CV Y SOBRESCRIBIR PERFIL CON IA (A PRUEBA DE FALLOS Y CAST ERRORS) ---
+// --- MODIFICADO: SUBIR CV Y SOBRESCRIBIR PERFIL CON IA (DOMADOR DE OLLAMA 2.0) ---
 exports.uploadCV = async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).send('No se subió ningún archivo');
         }
 
-        // 1. URL Pública del archivo para guardarlo en la Base de Datos
+        // 1. URL Pública del archivo
         const publicBaseUrl = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 5000}`;
         const cvUrl = `${publicBaseUrl}/uploads/${req.file.filename}`;
 
         console.log("Archivo guardado localmente. Link BD:", cvUrl);
 
-        // 2. Guardamos el perfil inicial con el link del CV ANTES de contactar a n8n
+        // 2. Guardamos el perfil inicial con el link del CV
         let profile = await Candidate.findOneAndUpdate(
             { user: req.user.id },
             { $set: { cv_url: cvUrl } },
             { new: true, upsert: true }
         );
 
-        // 3. MANDAR EL ARCHIVO FÍSICO A n8n (Bloque protegido con Try/Catch interno)
+        // 3. MANDAR EL ARCHIVO A n8n
         console.log("Enviando documento físico a n8n...");
         let dataIA = null;
         try {
             dataIA = await n8nService.analizarCvConIA(req.file.path);
         } catch (n8nError) {
-            // Atrapamos el error aquí. El servidor NO colapsa y la ruta del CV ya está guardada.
-            console.error("❌ Error conectando con n8n. El CV se guardó, pero la IA no pudo extraer los datos.");
+            console.error("❌ Error conectando con n8n.");
         }
 
-        // 4. Si n8n responde con el JSON de la IA, sobrescribimos el perfil
-        if (dataIA && dataIA.resultado_evaluacion) {
-            console.log("Datos recibidos de IA, sobrescribiendo perfil...");
+        // Si n8n nos devuelve un Array, extraemos el primer elemento.
+        if (Array.isArray(dataIA) && dataIA.length > 0) {
+            dataIA = dataIA[0];
+        }
+
+        // 👇 DOMADOR DE OLLAMA (Llaves principales) 👇
+        if (dataIA) {
+            if (dataIA.profile_profesional) dataIA.perfil_profesional = dataIA.profile_profesional;
             
-            const mappedExperience = dataIA.experiencia_laboral?.map(exp => ({
-                position: exp.puesto,
-                company: exp.empresa,
-                from: exp.fecha_inicio,
-                to: exp.fecha_fin,
-                description: exp.responsabilidades?.join('. '),
-                responsibilities: exp.responsabilidades
-            })) || [];
+            if (dataIA.resultado_evaluacion) {
+                dataIA.resultado_evaluacion.apto = dataIA.resultado_evaluacion.apto ?? dataIA.resultado_evaluacion.Apto;
+                dataIA.resultado_evaluacion.razon = dataIA.resultado_evaluacion.razon || dataIA.resultado_evaluacion.Razon;
+                dataIA.resultado_evaluacion.nivel_seniority = dataIA.resultado_evaluacion.nivel_seniority || dataIA.resultado_evaluacion.Nivel_seniority;
+                dataIA.resultado_evaluacion.compatibilidad_porcentaje = dataIA.resultado_evaluacion.compatibilidad_porcentaje || dataIA.resultado_evaluacion.Compatibilidad_porcentaje;
+            }
+            if (dataIA.analisis_ia) {
+                dataIA.analisis_ia.fortalezas = dataIA.analisis_ia.fortalezas || dataIA.analisis_ia.Fortalezas;
+                dataIA.analisis_ia.areas_mejora = dataIA.analisis_ia.areas_mejora || dataIA.analisis_ia.Areas_mejora;
+                dataIA.analisis_ia.riesgos_detectados = dataIA.analisis_ia.riesgos_detectados || dataIA.analisis_ia.Riesgos_detectados;
+                dataIA.analisis_ia.recomendacion_reclutador = dataIA.analisis_ia.recomendacion_reclutador || dataIA.analisis_ia.Recomendacion_reclutador;
+            }
+        }
+        // 👆 ========================================= 👆
+
+        // 4. Si tenemos los datos, sobrescribimos el perfil
+        if (dataIA && dataIA.resultado_evaluacion) {
+            console.log("Datos recibidos de IA, mapeando listas...");
+            
+            // 👇 DOMADOR DE OLLAMA (Para Experiencia y Educación) 👇
+            const mappedExperience = dataIA.experiencia_laboral?.map(exp => {
+                const responsabilidades = exp.responsabilidades || exp.Responsabilidades || [];
+                return {
+                    // Buscamos minúscula o mayúscula, si no hay nada ponemos string vacío
+                    position: exp.puesto || exp.Puesto || '',
+                    company: exp.empresa || exp.Empresa || '',
+                    from: exp.fecha_inicio || exp.Fecha_inicio || exp.FechaInicio || null,
+                    to: exp.fecha_fin || exp.Fecha_fin || exp.FechaFin || null,
+                    description: Array.isArray(responsabilidades) ? responsabilidades.join('. ') : (responsabilidades || ''),
+                    responsibilities: Array.isArray(responsabilidades) ? responsabilidades : [responsabilidades]
+                };
+            }) || [];
 
             const mappedEducation = dataIA.formacion_academica?.map(edu => ({
-                level: edu.nivel,
-                school: edu.institucion,
-                degree: edu.carrera,
-                from: edu.fecha_inicio,
-                to: edu.fecha_fin,
-                status: edu.estado
+                level: edu.nivel || edu.Nivel || '',
+                school: edu.institucion || edu.Institucion || '',
+                degree: edu.carrera || edu.Carrera || '',
+                from: edu.fecha_inicio || edu.Fecha_inicio || edu.FechaInicio || null,
+                to: edu.fecha_fin || edu.Fecha_fin || edu.FechaFin || null,
+                status: edu.estado || edu.Estado || ''
             })) || [];
+            // 👆 =================================================== 👆
 
-            const mappedSkills = dataIA.habilidades_tecnicas?.map(s => s.skill) || [];
+            const mappedSkills = dataIA.habilidades_tecnicas?.map(s => s.skill || s.Skill || '')
+                .filter(s => s !== '') || []; // Filtramos vacíos
 
+            const mappedCertifications = dataIA.certificaciones
+                ?.filter(cert => cert && cert.trim() !== '') 
+                ?.map(cert => {
+                    return typeof cert === 'string' ? { name: cert, title: cert } : cert;
+                }) || [];
+
+            const mappedSoftSkills = dataIA.habilidades_blandas
+                ?.filter(skill => typeof skill === 'string' && skill.trim() !== '') || [];
+
+            console.log("Sobrescribiendo Mongo...");
+
+            // Guardamos en Mongo
             profile = await Candidate.findOneAndUpdate(
                 { user: req.user.id },
                 { 
                     $set: { 
-                        title: dataIA.perfil_profesional?.area_principal,
-                        phone: dataIA.contacto?.telefono,
-                        location: `${dataIA.contacto?.ciudad || ''} ${dataIA.contacto?.pais || ''}`.trim(),
-                        experience_years: dataIA.perfil_profesional?.anios_experiencia_estimados || 0,
+                        title: dataIA.perfil_profesional?.area_principal || dataIA.perfil_profesional?.Area_principal,
+                        phone: dataIA.contacto?.telefono || dataIA.contacto?.Telefono,
+                        location: `${dataIA.contacto?.ciudad || dataIA.contacto?.Ciudad || ''} ${dataIA.contacto?.pais || dataIA.contacto?.Pais || ''}`.trim(),
+                        experience_years: dataIA.perfil_profesional?.anios_experiencia_estimados || dataIA.perfil_profesional?.Anios_experiencia_estimados || 0,
                         skills: mappedSkills,
                         experience: mappedExperience,
                         education: mappedEducation,
-                        'ai_details.resume': dataIA.perfil_profesional?.resumen,
-                        'ai_details.soft_skills': dataIA.habilidades_blandas,
-                        'ai_details.certifications': dataIA.certificaciones,
+                        'ai_details.resume': dataIA.perfil_profesional?.resumen || dataIA.perfil_profesional?.Resumen,
+                        'ai_details.soft_skills': mappedSoftSkills,
+                        'ai_details.certifications': mappedCertifications,
                         'ai_details.analysis': {
                             is_suitable: dataIA.resultado_evaluacion?.apto,
                             reason: dataIA.resultado_evaluacion?.razon,
@@ -185,11 +229,10 @@ exports.uploadCV = async (req, res) => {
             );
         }
 
-        // 5. Respondemos al Frontend. El perfil siempre se devuelve (con o sin datos de la IA).
         res.json(profile);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Error al subir el CV');
+        console.error("Error al subir el CV:", error);
+        res.status(500).send('Error al procesar el CV');
     }
 };
