@@ -3,16 +3,22 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const auth = require('../middleware/auth'); // <--- ¡ESTA LÍNEA FALTABA!
+const { validateRegister, validateLogin } = require('../middleware/validators');
 
 // @route   POST api/auth/register
 // @desc    Registrar usuario
 // @access  Public
-router.post('/register', authController.register);
+router.post('/register', validateRegister, authController.register);
 
 // @route   POST api/auth/login
 // @desc    Iniciar sesión
 // @access  Public
-router.post('/login', authController.login);
+router.post('/login', validateLogin, authController.login);
+
+// @route   POST api/auth/logout
+// @desc    Cerrar sesión
+// @access  Public
+router.post('/logout', authController.logout);
 
 // @route   POST api/auth/change-password
 // @desc    Cambiar contraseña

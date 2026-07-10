@@ -2,8 +2,8 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = function (req, res, next) {
-    // 1. Leer el token del header
-    const token = req.header('x-auth-token');
+    // 1. Leer el token de las cookies (o del header como fallback temporal)
+    const token = req.cookies?.token || req.header('x-auth-token');
 
     // 2. Revisar si no hay token
     if (!token) {

@@ -77,7 +77,6 @@ const RegisterPage = () => {
 
       const res = await axios.post('/auth/register', dataToSend);
       
-      localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
 
       if (role === 'candidate') {

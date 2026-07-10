@@ -41,6 +41,15 @@ exports.register = async (req, res) => {
 
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' }, (err, token) => {
             if (err) throw err;
+            
+            // Set cookie
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax', // Permite que funcione local y en prod si están en el mismo subdominio
+                maxAge: 24 * 60 * 60 * 1000 // 1 día
+            });
+
             // ¡AQUÍ ESTÁ EL CAMBIO! Agregamos el objeto 'user' en la respuesta
             res.json({ 
                 token, 
@@ -85,6 +94,15 @@ exports.login = async (req, res) => {
 
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' }, (err, token) => {
             if (err) throw err;
+            
+            // Set cookie
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 24 * 60 * 60 * 1000 // 1 día
+            });
+
             res.json({ 
                 token, 
                 user: {
@@ -100,6 +118,12 @@ exports.login = async (req, res) => {
         console.error(error.message);
         res.status(500).send('Error en el servidor');
     }
+};
+
+// --- CERRAR SESIÓN ---
+exports.logout = (req, res) => {
+    res.clearCookie('token');
+    res.json({ msg: 'Sesión cerrada correctamente' });
 };
 
 exports.changePassword = async (req, res) => {
