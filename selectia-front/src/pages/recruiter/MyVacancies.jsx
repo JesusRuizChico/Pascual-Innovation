@@ -1,5 +1,5 @@
 // src/pages/recruiter/MyVacancies.jsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
     Search, 
@@ -11,29 +11,10 @@ import {
     PlusCircle, 
     Briefcase
 } from 'lucide-react';
-import axios from '../../api/axios';
+import useVacancies from '../../hooks/useVacancies';
 
 const MyVacancies = () => {
-  const [vacancies, setVacancies] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  // 1. Cargar vacantes reales al entrar
-  useEffect(() => {
-    const fetchVacancies = async () => {
-      try {
-        const res = await axios.get('/vacancies/mine');
-        setVacancies(res.data);
-      } catch (err) {
-        console.error(err);
-        setError('No pudimos cargar tus vacantes.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVacancies();
-  }, []);
+  const { vacancies, loading, error } = useVacancies();
 
   // Función auxiliar para formatear fecha
   const formatDate = (dateString) => {

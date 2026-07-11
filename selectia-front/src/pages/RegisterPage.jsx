@@ -12,6 +12,9 @@ const RegisterPage = () => {
   const [serverError, setServerError] = useState('');
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showDataProtectionModal, setShowDataProtectionModal] = useState(false);
+  const [showPrivacyPolicyModal, setShowPrivacyPolicyModal] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -45,6 +48,10 @@ const RegisterPage = () => {
           if (!formData.companyName.trim()) newErrors.companyName = "El nombre de la empresa es requerido.";
           if (!formData.rfc.trim()) newErrors.rfc = "El RFC es requerido.";
           else if (formData.rfc.length < 12 || formData.rfc.length > 13) newErrors.rfc = "RFC inválido (12-13 caracteres).";
+      }
+
+      if (!acceptedTerms) {
+          newErrors.acceptedTerms = "Debes aceptar los términos de protección de datos y la política de privacidad.";
       }
 
       setErrors(newErrors);
@@ -251,9 +258,40 @@ const RegisterPage = () => {
             )}
           </button>
 
-          <p className="text-xs text-slate-500 dark:text-slate-500 text-center px-4 transition-colors">
-            Al registrarte, aceptas nuestros <a href="#" className="underline hover:text-slate-900 dark:hover:text-white transition-colors">Términos</a>.
-          </p>
+          <div className="space-y-3 pt-2">
+            <div className="flex items-start gap-3">
+              <input 
+                type="checkbox" 
+                id="acceptedTerms" 
+                name="acceptedTerms" 
+                checked={acceptedTerms}
+                onChange={(e) => {
+                  setAcceptedTerms(e.target.checked);
+                  if (errors.acceptedTerms) setErrors({ ...errors, acceptedTerms: null });
+                }}
+                className="mt-1 h-4 w-4 rounded border-slate-300 dark:border-white/10 bg-slate-50 dark:bg-brand-dark/50 text-brand-primary focus:ring-brand-primary"
+              />
+              <label htmlFor="acceptedTerms" className="text-xs text-slate-600 dark:text-slate-400 select-none cursor-pointer transition-colors leading-relaxed">
+                Acepto los términos de la{' '}
+                <button 
+                  type="button" 
+                  onClick={() => setShowDataProtectionModal(true)}
+                  className="text-brand-primary font-bold hover:underline transition-colors focus:outline-none"
+                >
+                  Protección de Datos Personales
+                </button>{' '}
+                y la{' '}
+                <button 
+                  type="button" 
+                  onClick={() => setShowPrivacyPolicyModal(true)}
+                  className="text-brand-primary font-bold hover:underline transition-colors focus:outline-none"
+                >
+                  Política de Privacidad
+                </button>.
+              </label>
+            </div>
+            {errors.acceptedTerms && <p className="text-red-500 dark:text-red-400 text-xs ml-1 transition-colors">{errors.acceptedTerms}</p>}
+          </div>
         </form>
 
         <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10 text-center transition-colors">
@@ -263,6 +301,129 @@ const RegisterPage = () => {
         </div>
 
       </div>
+
+      {/* Modal de Protección de Datos */}
+      {showDataProtectionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-brand-surface rounded-3xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-white/5">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Cumplimiento de Protección de Datos (LFPDPPP)</h3>
+              <button 
+                type="button"
+                onClick={() => setShowDataProtectionModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors text-2xl font-bold focus:outline-none"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="overflow-y-auto p-6 space-y-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="font-semibold text-slate-900 dark:text-white">
+                En SelectIA garantizamos la protección de tus datos personales conforme a la Ley Federal de Protección de Datos Personales en Posesión de Particulares (LFPDPPP).
+              </p>
+              
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">1. Consentimiento Informado</h4>
+              <p>Recabamos y procesamos tu información únicamente si lo autorizas de forma explícita. Este proceso es totalmente transparente y accesible.</p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">2. Finalidad del Tratamiento</h4>
+              <p>Tus datos se recaban con el único propósito de gestionar tu cuenta, facilitar postulaciones de empleo (candidatos), publicar vacantes (reclutadores) y analizar perfiles con inteligencia artificial. No solicitamos datos innecesarios.</p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">3. Seguridad de tus Datos</h4>
+              <p>Implementamos protocolos seguros (HTTPS/TLS) y algoritmos de cifrado de contraseñas de última generación (bcrypt) para resguardar tu información de accesos no autorizados.</p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">4. Derechos ARCO</h4>
+              <p>Puedes acceder, rectificar, cancelar u oponerte al uso de tus datos en cualquier momento desde tu panel de usuario o enviando un correo a <a href="mailto:privacidad@selectia.com" className="text-brand-primary underline">privacidad@selectia.com</a>.</p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">5. Retención y Eliminación</h4>
+              <p>Tus datos se conservan solo mientras tu cuenta esté activa. Si decides darte de baja, eliminaremos permanentemente tu información de todos nuestros sistemas.</p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">6. Transferencia a Terceros</h4>
+              <p>Solo transferimos tu información curricular a los reclutadores autorizados cuando aplicas activamente a una vacante. No vendemos ni compartimos datos con fines publicitarios.</p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">7. Brechas de Seguridad</h4>
+              <p>En caso de cualquier incidente de seguridad, te notificaremos de inmediato junto con las autoridades reguladoras correspondientes en un plazo no mayor a 24 horas.</p>
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-brand-dark/30">
+              <button 
+                type="button"
+                onClick={() => setShowDataProtectionModal(false)}
+                className="px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors"
+              >
+                Cerrar
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setShowDataProtectionModal(false);
+                  setAcceptedTerms(true);
+                }}
+                className="px-4 py-2 text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/95 rounded-xl transition-all"
+              >
+                Entendido y Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Política de Privacidad */}
+      {showPrivacyPolicyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-brand-surface rounded-3xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-white/5">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Aviso de Privacidad Integral</h3>
+              <button 
+                type="button"
+                onClick={() => setShowPrivacyPolicyModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors text-2xl font-bold focus:outline-none"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="overflow-y-auto p-6 space-y-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="font-semibold text-slate-900 dark:text-white">
+                Innovaciones Pascual S.A. de C.V. (SelectIA), con domicilio en Querétaro, México, es responsable del tratamiento de sus datos personales.
+              </p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">1. Datos que Recabamos</h4>
+              <p><strong>Candidatos:</strong> Nombre completo, correo electrónico y currículum vitae (historial académico y laboral). <br /><strong>Reclutadores:</strong> Nombre completo, correo electrónico corporativo, nombre de la empresa y RFC.</p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">2. Finalidades Primarias</h4>
+              <p>Tratamos sus datos para: crear y gestionar su cuenta de acceso, permitir la intermediación de ofertas laborales, evaluar la afinidad curricular con IA y habilitar canales de comunicación para soporte técnico.</p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">3. Derechos ARCO</h4>
+              <p>Tiene derecho a acceder, rectificar, cancelar u oponerse al tratamiento de sus datos personales. Para ejercer estos derechos, puede actualizar su perfil en la plataforma o contactar a nuestro oficial de privacidad en <a href="mailto:privacidad@selectia.com" className="text-brand-primary underline">privacidad@selectia.com</a>.</p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">4. Transferencias de Datos</h4>
+              <p>Sus datos personales solo son compartidos con los reclutadores cuando decide postularse a una vacante específica. No realizamos transferencias comerciales con terceros ajenos al servicio.</p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">5. Medidas de Seguridad</h4>
+              <p>Resguardamos su información personal con medidas técnicas avanzadas, cifrando las transmisiones mediante TLS/HTTPS y encriptando las contraseñas para evitar filtraciones.</p>
+
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-2">6. Actualizaciones de este Aviso</h4>
+              <p>Cualquier modificación a este aviso se publicará en esta sección y se le notificará vía correo electrónico.</p>
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-brand-dark/30">
+              <button 
+                type="button"
+                onClick={() => setShowPrivacyPolicyModal(false)}
+                className="px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors"
+              >
+                Cerrar
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setShowPrivacyPolicyModal(false);
+                  setAcceptedTerms(true);
+                }}
+                className="px-4 py-2 text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/95 rounded-xl transition-all"
+              >
+                Entendido y Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
