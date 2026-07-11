@@ -120,3 +120,98 @@ exports.downloadReport = async (req, res) => {
         res.status(500).send('Error al generar reporte');
     }
 };
+
+// --- REPORTE AVANZADO DE CONVERSIÓN DE CANDIDATOS POR VACANTE ---
+exports.getConversionReport = async (req, res) => {
+    try {
+        const recruiterId = req.user.id;
+
+        // 1. Obtener IDs de las vacantes del reclutador de manera eficiente y directa
+        const myVacancies = await Vacancy.find({ created_by: recruiterId }).select('_id');
+        const myVacancyIds = myVacancies.map(v => v._id);
+
+        if (myVacancyIds.length === 0) {
+            return res.json([]);
+        }
+
+        // 2. Ejecutar la tubería de agregación altamente eficiente en Application
+        const conversionReport = await Application.aggregate([
+            // Filtrar las postulaciones de las vacantes de este reclutador
+            // Usando un índice en la referencia 'vacancy' para máxima velocidad
+            {
+                $match: {
+                    vacancy: { $in: myVacancyIds }
+                }
+            },
+            // Agrupar por vacante y contar ocurrencias de cada estado
+            {
+                $group: {
+                    _id: "$vacancy",
+                    totalApplications: { $sum: 1 },
+                    nuevo: { $sum: { $cond: [{ $eq: ["$status", "nuevo"] }, 1, 0] } },
+                    entrevista: { $sum: { $cond: [{ $eq: ["$status", "entrevista"] }, 1, 0] } },
+                    rechazado: { $sum: { $cond: [{ $eq: ["$status", "rechazado"] }, 1, 0] } },
+                    contratado: { $sum: { $cond: [{ $eq: ["$status", "contratado"] }, 1, 0] } },
+                    avgAiScore: { $avg: "$ai_score" }
+                }
+            },
+            // Unir con la colección de Vacancies después de agrupar para evitar realizar un $lookup
+            // costoso en todos los documentos de postulaciones antes del agrupamiento (Optimización Clave)
+            {
+                $lookup: {
+                    from: "vacancies",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "vacancyDetails"
+                }
+            },
+            // Aplanar el array resultante de la unión
+            {
+                $unwind: "$vacancyDetails"
+            },
+            // Proyectar el reporte final calculando las métricas de conversión avanzada
+            {
+                $project: {
+                    _id: 0,
+                    vacancyId: "$_id",
+                    title: "$vacancyDetails.title",
+                    modality: "$vacancyDetails.modality",
+                    status: "$vacancyDetails.status",
+                    created_at: "$vacancyDetails.created_at",
+                    totalApplications: 1,
+                    nuevo: 1,
+                    entrevista: 1,
+                    rechazado: 1,
+                    contratado: 1,
+                    avgAiScore: { $round: ["$avgAiScore", 1] },
+                    conversionRates: {
+                        interviewRate: {
+                            $cond: [
+                                { $gt: ["$totalApplications", 0] },
+                                { $round: [{ $multiply: [{ $divide: [{ $add: ["$entrevista", "$contratado"] }, "$totalApplications"] }, 100] }, 2] },
+                                0
+                            ]
+                        },
+                        hireRate: {
+                            $cond: [
+                                { $gt: ["$totalApplications", 0] },
+                                { $round: [{ $multiply: [{ $divide: ["$contratado", "$totalApplications"] }, 100] }, 2] },
+                                0
+                            ]
+                        }
+                    }
+                }
+            },
+            // Ordenar por volumen total de postulaciones de forma descendente
+            {
+                $sort: { totalApplications: -1 }
+            }
+        ]);
+
+        res.json(conversionReport);
+
+    } catch (error) {
+        console.error("Error al generar reporte de conversión:", error);
+        res.status(500).json({ error: "Error al generar reporte de conversión" });
+    }
+};

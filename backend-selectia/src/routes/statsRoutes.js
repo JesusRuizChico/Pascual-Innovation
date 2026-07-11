@@ -18,6 +18,9 @@ router.get('/admin', auth, statsController.getAdminStats);
 
 router.get('/report', auth, statsController.downloadReport); // <--- NUEVA RUTA
 
-
+// @route   GET api/stats/conversion
+// @desc    Reporte avanzado de conversión de candidatos por vacante
+// @access  Privado (Reclutador)
+router.get('/conversion', auth, statsController.getConversionReport);
 
 module.exports = router;

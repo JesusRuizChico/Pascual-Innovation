@@ -5,8 +5,10 @@
     } from 'lucide-react';
     import { Link } from 'react-router-dom';
     import axios from '../../api/axios';
+    import useVacancies from '../../hooks/useVacancies';
 
     const RecruiterDashboard = () => {
+    const { vacancies, loading: vacanciesLoading } = useVacancies();
     const [statsData, setStatsData] = useState({
         totalVacancies: 0, activeVacancies: 0, totalCandidates: 0, newCandidates: 0
     });
@@ -59,12 +61,12 @@
 
     const statsCards = [
         { title: 'Candidatos Nuevos', value: statsData.newCandidates, change: 'Pendientes', icon: <Users className="text-blue-500 dark:text-blue-400" />, color: 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20' },
-        { title: 'Vacantes Activas', value: statsData.activeVacancies, change: `de ${statsData.totalVacancies} total`, icon: <Briefcase className="text-purple-500 dark:text-purple-400" />, color: 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/20' },
+        { title: 'Vacantes Activas', value: vacancies.filter(v => v.status === 'activa').length, change: `de ${vacancies.length} total`, icon: <Briefcase className="text-purple-500 dark:text-purple-400" />, color: 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/20' },
         { title: 'Total Postulaciones', value: statsData.totalCandidates, change: '+100%', icon: <Clock className="text-orange-500 dark:text-orange-400" />, color: 'bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/20' },
         { title: 'Eficiencia IA', value: '92%', change: '+5%', icon: <Sparkles className="text-green-500 dark:text-green-400" />, color: 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20' },
     ];
 
-    if (loading) return <div className="flex justify-center items-center h-96"><Loader2 className="animate-spin text-blue-500" size={40}/></div>;
+    if (loading || vacanciesLoading) return <div className="flex justify-center items-center h-96"><Loader2 className="animate-spin text-blue-500" size={40}/></div>;
 
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 transition-colors">
